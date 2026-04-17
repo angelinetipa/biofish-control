@@ -145,7 +145,7 @@ export default function DashboardScreen({ onLogout }) {
           <View style={styles.buttonGrid}>
             <ControlButton
               label="Start" icon="play"
-              colors={[Colors.teal, Colors.blue]}
+              colors={[Colors.gradientStart, Colors.statusClean]}
               onPress={handleStart}
               disabled={isRunning || isCleaning}
             />
