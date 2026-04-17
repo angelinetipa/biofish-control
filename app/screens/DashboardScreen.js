@@ -54,10 +54,13 @@ function ControlButton({ label, icon, onPress, disabled, colors: btnColors }) {
   );
 }
 
-function TempCard({ label, temp, heaterOn, fanOn }) {
+function TempCard({ title, icon, temp, heaterOn, fanOn }) {
   return (
     <View style={[Theme.card, Theme.halfCard]}>
-      <Text style={Theme.cardLabel}>{label}</Text>
+      <View style={Theme.cardLabelRow}>
+        <Ionicons name={icon} size={13} color={Colors.textMid} />
+        <Text style={Theme.cardLabel}>{title}</Text>
+      </View>
       <Text style={styles.tempText}>{temp}°C</Text>
       <View style={Theme.row}>
         <StatusChip icon="flame" label="Heat" active={heaterOn} />
@@ -123,7 +126,10 @@ export default function DashboardScreen({ onLogout }) {
       >
         {/* ── Machine Control ── */}
         <View style={Theme.card}>
-          <Text style={Theme.cardLabel}>⚡  Machine Control</Text>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="flash-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>Machine Control</Text>
+          </View>
 
           <View style={styles.statusRow}>
             <View style={[styles.statusDot, { backgroundColor: meta.color }]} />
@@ -167,7 +173,10 @@ export default function DashboardScreen({ onLogout }) {
 
         {/* ── LCD Mirror ── */}
         <View style={styles.lcdCard}>
-          <Text style={styles.lcdLabel}>📟  LCD DISPLAY</Text>
+          <View style={styles.lcdLabelRow}>
+            <Ionicons name="terminal-outline" size={13} color={Colors.teal} />
+            <Text style={styles.lcdLabel}>LCD DISPLAY</Text>
+          </View>
           <View style={styles.lcd}>
             {[
               MONITOR_PLACEHOLDER.stage,
@@ -182,20 +191,25 @@ export default function DashboardScreen({ onLogout }) {
 
         {/* ── Timer ── */}
         <View style={Theme.card}>
-          <Text style={Theme.cardLabel}>⏱  Elapsed Time</Text>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="timer-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>Elapsed Time</Text>
+          </View>
           <Text style={styles.timerText}>{MONITOR_PLACEHOLDER.timer}</Text>
         </View>
 
         {/* ── Temperatures ── */}
         <View style={Theme.row}>
           <TempCard
-            label="🌡  C1 Temp"
+            title="C1 Temp"
+            icon="thermometer-outline"
             temp={MONITOR_PLACEHOLDER.c1Temp}
             heaterOn={MONITOR_PLACEHOLDER.c1Heater}
             fanOn={MONITOR_PLACEHOLDER.c1Fan}
           />
           <TempCard
-            label="🌡  C3 Temp"
+            title="C3 Temp"
+            icon="thermometer-outline"
             temp={MONITOR_PLACEHOLDER.c3Temp}
             heaterOn={MONITOR_PLACEHOLDER.c3Heater}
             fanOn={MONITOR_PLACEHOLDER.c3Fan}
@@ -204,7 +218,10 @@ export default function DashboardScreen({ onLogout }) {
 
         {/* ── Volume ── */}
         <View style={Theme.card}>
-          <Text style={Theme.cardLabel}>💧  C3 Volume (Ultrasonic)</Text>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="water-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>C3 Volume (Ultrasonic)</Text>
+          </View>
           <View style={styles.volRow}>
             <Text style={styles.volText}>{MONITOR_PLACEHOLDER.volume} mL</Text>
             <Text style={styles.volRange}>
@@ -222,7 +239,10 @@ export default function DashboardScreen({ onLogout }) {
 
         {/* ── Stage Progress ── */}
         <View style={Theme.card}>
-          <Text style={Theme.cardLabel}>📋  Stage Progress</Text>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="list-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>Stage Progress</Text>
+          </View>
           {STAGES.map((stage, i) => {
             const done   = i < stageIdx;
             const active = i === stageIdx && isRunning;
@@ -278,7 +298,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3, shadowRadius: 16, elevation: 12,
   },
-  lcdLabel: { color: Colors.teal, fontSize: 11, fontWeight: '800', letterSpacing: 1, marginBottom: 10 },
+  lcdLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
+  lcdLabel: { color: Colors.teal, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
   lcd:      { backgroundColor: '#0d2b3e', borderRadius: 12, padding: 14, gap: 6 },
   lcdRow:   { fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', color: '#7efff5', fontSize: 13, letterSpacing: 0.8 },
   timerText: { fontSize: 36, fontWeight: '900', color: Colors.dark, letterSpacing: 2 },

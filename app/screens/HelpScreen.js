@@ -75,7 +75,10 @@ export default function HelpScreen() {
 
         {/* How to Use */}
         <View style={Theme.card}>
-          <Text style={Theme.cardLabel}>📖  How to Use</Text>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="book-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>How to Use</Text>
+          </View>
           {HOW_TO_USE.map((item, i) => (
             <View key={item.step} style={[styles.stepRow, i === HOW_TO_USE.length - 1 && { marginBottom: 0 }]}>
               <View style={styles.stepCircle}>
@@ -91,7 +94,10 @@ export default function HelpScreen() {
 
         {/* FAQ */}
         <View style={Theme.card}>
-          <Text style={Theme.cardLabel}>❓  FAQ</Text>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="help-circle-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>FAQ</Text>
+          </View>
           {FAQS.map((item, i) => (
             <AccordionItem key={i} question={item.q} answer={item.a} />
           ))}
@@ -99,7 +105,10 @@ export default function HelpScreen() {
 
         {/* Troubleshooting */}
         <View style={Theme.card}>
-          <Text style={Theme.cardLabel}>🔧  Troubleshooting</Text>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="build-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>Troubleshooting</Text>
+          </View>
           {TROUBLESHOOT.map((item, i) => (
             <View key={i} style={[styles.troubleRow, i === TROUBLESHOOT.length - 1 && { marginBottom: 0 }]}>
               <View style={styles.troubleHeader}>

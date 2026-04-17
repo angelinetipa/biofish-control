@@ -19,7 +19,6 @@ export const Theme = StyleSheet.create({
     fontWeight: '800',
     color: Colors.textMid,
     letterSpacing: 0.8,
-    marginBottom: 12,
     textTransform: 'uppercase',
   },
   row: {
@@ -44,5 +43,11 @@ export const Theme = StyleSheet.create({
     padding: 16,
     paddingBottom: 120,
     gap: 16,
+  },
+  cardLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 12,
   },
 });

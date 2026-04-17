@@ -4,6 +4,7 @@ import {
   Image, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
 import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
@@ -97,7 +98,10 @@ export default function LoginScreen({ onLogin }) {
 
             {/* Demo credentials */}
             <View style={styles.demoCard}>
-              <Text style={styles.demoTitle}>🔒  DEMO CREDENTIALS</Text>
+              <View style={styles.demoTitleRow}>
+                <Ionicons name="lock-closed-outline" size={12} color={Colors.blue} />
+                <Text style={styles.demoTitle}>DEMO CREDENTIALS</Text>
+              </View>
               {DEMO_CREDENTIALS.map((c, i) => (
                 <View key={c.label} style={[styles.credRow, i === DEMO_CREDENTIALS.length - 1 && { marginBottom: 0 }]}>
                   <Text style={styles.credLabel}>{c.label}</Text>
@@ -191,7 +195,10 @@ const styles = StyleSheet.create({
   },
   demoTitle: {
     fontSize: 10, fontWeight: '800', color: Colors.blue,
-    marginBottom: 10, letterSpacing: 0.8, textTransform: 'uppercase',
+    letterSpacing: 0.8, textTransform: 'uppercase',
+  },
+  demoTitleRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10,
   },
   credRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
