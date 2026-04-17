@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   Image, ScrollView,
@@ -8,27 +8,40 @@ import { Ionicons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
 import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
+import { supabase } from '../lib/supabase';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STAGES = ['Extraction', 'Filtration', 'Formulation', 'Formation'];
 
 const STATUS_META = {
-  IDLE:     { color: Colors.statusIdle,    label: 'Idle',     desc: 'Machine is ready'       },
-  RUNNING:  { color: Colors.statusRunning, label: 'Running',  desc: 'Process in progress'    },
-  PAUSED:   { color: Colors.statusPaused,  label: 'Paused',   desc: 'Process paused'         },
-  CLEANING: { color: Colors.statusClean,   label: 'Cleaning', desc: 'Cleaning cycle active'  },
+  IDLE:     { color: Colors.statusIdle,    label: 'Idle',     desc: 'Machine is ready'      },
+  RUNNING:  { color: Colors.statusRunning, label: 'Running',  desc: 'Process in progress'   },
+  PAUSED:   { color: Colors.statusPaused,  label: 'Paused',   desc: 'Process paused'        },
+  CLEANING: { color: Colors.statusClean,   label: 'Cleaning', desc: 'Cleaning cycle active' },
 };
 
-const MONITOR = {
-  timer:    '00:08:54',
-  c1Temp:   58.3,
-  c3Temp:   27.1,
-  c1Heater: true,
-  c1Fan:    false,
-  c3Heater: false,
-  c3Fan:    false,
+const DEFAULT_STATE = {
+  status:      'IDLE',
+  stage_index: 0,
+  elapsed_secs: 0,
+  c1_temp:     0,
+  c3_temp:     0,
+  c1_heater:   false,
+  c1_fan:      false,
+  c3_heater:   false,
+  c3_fan:      false,
+  process_log: [],
 };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatTime(secs) {
+  const h = String(Math.floor(secs / 3600)).padStart(2, '0');
+  const m = String(Math.floor((secs % 3600) / 60)).padStart(2, '0');
+  const s = String(secs % 60).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -73,46 +86,75 @@ function StageStepper({ stageIdx, isRunning }) {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function DashboardScreen({ onLogout }) {
-  const [status, setStatus]     = useState('IDLE');
-  const [stageIdx, setStageIdx] = useState(0);
+  const [machine, setMachine] = useState(DEFAULT_STATE);
+  const [loading, setLoading] = useState(false);
 
+  const status     = machine.status;
+  const stageIdx   = machine.stage_index;
   const isRunning  = status === 'RUNNING' || status === 'PAUSED';
   const isCleaning = status === 'CLEANING';
   const meta       = STATUS_META[status] ?? STATUS_META.IDLE;
 
-  const handleStart = () => { setStatus('RUNNING'); setStageIdx(0); };
-  const handlePause = () => setStatus(status === 'PAUSED' ? 'RUNNING' : 'PAUSED');
-  const handleStop  = () => { setStatus('IDLE'); setStageIdx(0); };
-  const handleClean = () => setStatus('CLEANING');
+  // ── Fetch status from Supabase ──
+  useEffect(() => {
+    fetchStatus();
+
+    // Real-time subscription
+    const channel = supabase
+      .channel('machine_status')
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'machine_status' },
+        (payload) => setMachine(payload.new)
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, []);
+
+  const fetchStatus = async () => {
+    const { data, error } = await supabase
+      .from('machine_status')
+      .select('*')
+      .eq('id', 1)
+      .single();
+    if (data) setMachine(data);
+  };
+
+  // ── Send command to Supabase ──
+  const sendCommand = async (command) => {
+    setLoading(true);
+    await supabase.from('machine_commands').insert({ command });
+    setLoading(false);
+  };
 
   const BUTTONS = [
     {
       label:    'Start',
       icon:     'play',
       colors:   ['#3DBFB8', '#2A9E97'],
-      onPress:  handleStart,
-      disabled: isRunning || isCleaning,
+      onPress:  () => sendCommand('start'),
+      disabled: isRunning || isCleaning || loading,
     },
     {
       label:    status === 'PAUSED' ? 'Resume' : 'Pause',
       icon:     status === 'PAUSED' ? 'play-circle-outline' : 'pause',
       colors:   ['#F0A030', '#D4840A'],
-      onPress:  handlePause,
-      disabled: !isRunning,
+      onPress:  () => sendCommand(status === 'PAUSED' ? 'resume' : 'pause'),
+      disabled: !isRunning || loading,
     },
     {
       label:    'Stop',
       icon:     'stop-circle-outline',
       colors:   ['#D9534F', '#B83230'],
-      onPress:  handleStop,
-      disabled: !isRunning,
+      onPress:  () => sendCommand('stop'),
+      disabled: !isRunning || loading,
     },
     {
       label:    'Clean',
       icon:     'water-outline',
       colors:   ['#4A7FD4', '#2E63B8'],
-      onPress:  handleClean,
-      disabled: isRunning || isCleaning,
+      onPress:  () => sendCommand('clean'),
+      disabled: isRunning || isCleaning || loading,
     },
   ];
 
@@ -133,7 +175,7 @@ export default function DashboardScreen({ onLogout }) {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* ── Status + Stage + Temps ── */}
+        {/* ── Status + Stage + Temps + Log ── */}
         <View style={Theme.card}>
 
           {/* Status row */}
@@ -147,7 +189,7 @@ export default function DashboardScreen({ onLogout }) {
             </View>
             <View style={styles.timerBadge}>
               <Ionicons name="timer-outline" size={12} color={Colors.textMid} />
-              <Text style={styles.timerText}>{MONITOR.timer}</Text>
+              <Text style={styles.timerText}>{formatTime(machine.elapsed_secs)}</Text>
             </View>
           </View>
 
@@ -164,10 +206,10 @@ export default function DashboardScreen({ onLogout }) {
                 <Ionicons name="thermometer-outline" size={13} color={Colors.textMid} />
                 <Text style={Theme.cardLabel}>C1 Temp</Text>
               </View>
-              <Text style={styles.tempText}>{MONITOR.c1Temp}°C</Text>
+              <Text style={styles.tempText}>{machine.c1_temp.toFixed(1)}°C</Text>
               <View style={styles.chipRow}>
-                <StatusChip icon="flame" label="Heat" active={MONITOR.c1Heater} />
-                <StatusChip icon="partly-sunny-outline" label="Fan" active={MONITOR.c1Fan} />
+                <StatusChip icon="flame" label="Heat" active={machine.c1_heater} />
+                <StatusChip icon="partly-sunny-outline" label="Fan" active={machine.c1_fan} />
               </View>
             </View>
 
@@ -178,12 +220,33 @@ export default function DashboardScreen({ onLogout }) {
                 <Ionicons name="thermometer-outline" size={13} color={Colors.textMid} />
                 <Text style={Theme.cardLabel}>C3 Temp</Text>
               </View>
-              <Text style={styles.tempText}>{MONITOR.c3Temp}°C</Text>
+              <Text style={styles.tempText}>{machine.c3_temp.toFixed(1)}°C</Text>
               <View style={styles.chipRow}>
-                <StatusChip icon="flame" label="Heat" active={MONITOR.c3Heater} />
-                <StatusChip icon="partly-sunny-outline" label="Fan" active={MONITOR.c3Fan} />
+                <StatusChip icon="flame" label="Heat" active={machine.c3_heater} />
+                <StatusChip icon="partly-sunny-outline" label="Fan" active={machine.c3_fan} />
               </View>
             </View>
+          </View>
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Process Log */}
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="document-text-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>Process Log</Text>
+          </View>
+          <View style={styles.logList}>
+            {machine.process_log.length === 0 ? (
+              <Text style={styles.logEmpty}>No activity yet.</Text>
+            ) : (
+              machine.process_log.map((entry, i) => (
+                <View key={i} style={styles.logRow}>
+                  <View style={[styles.logDot, i === 0 && styles.logDotActive]} />
+                  <Text style={[styles.logText, i === 0 && styles.logTextActive]}>{entry}</Text>
+                </View>
+              ))
+            )}
           </View>
 
         </View>
@@ -208,7 +271,7 @@ export default function DashboardScreen({ onLogout }) {
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                   style={styles.btn}
                 >
-                  <Ionicons name={btn.icon} size={26} color={Colors.white} />
+                  <Ionicons name={btn.icon} size={22} color={Colors.white} />
                   <Text style={styles.btnText}>{btn.label}</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -224,7 +287,6 @@ export default function DashboardScreen({ onLogout }) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12,
@@ -240,14 +302,10 @@ const styles = StyleSheet.create({
 
   scroll: { padding: 16, paddingBottom: 120, gap: 14 },
 
-  // Status
-  statusRow: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'flex-start', marginBottom: 16,
-  },
+  statusRow:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   statusLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
   statusDot:      { width: 10, height: 10, borderRadius: 5 },
-  statusText:     { fontSize: 24, fontWeight: '900', letterSpacing: 0.5 },
+  statusText:     { fontSize: 30, fontWeight: '900', letterSpacing: 0.5 },
   statusDesc:     { fontSize: 12, color: Colors.textMid, marginLeft: 18 },
   timerBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -256,9 +314,8 @@ const styles = StyleSheet.create({
   },
   timerText: { fontSize: 13, fontWeight: '700', color: Colors.dark, letterSpacing: 1 },
 
-  // Stepper
-  stepperRow: { flexDirection: 'row', alignItems: 'center' },
-  stepItem:   { alignItems: 'center', flex: 1 },
+  stepperRow:      { flexDirection: 'row', alignItems: 'center' },
+  stepItem:        { alignItems: 'center', flex: 1 },
   stepCircle: {
     width: 28, height: 28, borderRadius: 14,
     backgroundColor: Colors.inputBg,
@@ -273,14 +330,11 @@ const styles = StyleSheet.create({
   stepLabelActive: { color: Colors.blue, fontWeight: '800' },
   stepLabelDone:   { color: Colors.teal },
 
-  // Divider
-  divider:     { height: 1, backgroundColor: Colors.inputBg, marginVertical: 16 },
+  divider:     { height: 1, backgroundColor: Colors.inputBg, marginVertical: 14 },
   tempDivider: { width: 1, backgroundColor: Colors.inputBg, marginHorizontal: 8, alignSelf: 'stretch' },
-
-  // Temps
   tempBlock:    { flex: 1 },
   tempLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
-  tempText:     { fontSize: 26, fontWeight: '900', color: Colors.blue, marginBottom: 8 },
+  tempText:     { fontSize: 20, fontWeight: '900', color: Colors.blue, marginBottom: 8 },
   chipRow:      { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -291,13 +345,17 @@ const styles = StyleSheet.create({
   chipText:    { fontSize: 10, color: Colors.textLight, fontWeight: '600' },
   chipTextOn:  { color: Colors.white },
 
-  // Buttons
+  logList:       { gap: 8 },
+  logEmpty:      { fontSize: 12, color: Colors.textLight, fontStyle: 'italic' },
+  logRow:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  logDot:        { width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.inputBg, marginTop: 5, flexShrink: 0 },
+  logDotActive:  { backgroundColor: Colors.teal },
+  logText:       { fontSize: 12, color: Colors.textMid, lineHeight: 18, flex: 1 },
+  logTextActive: { color: Colors.dark, fontWeight: '600' },
+
   buttonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   btnWrap:    { width: '47%', borderRadius: 18, overflow: 'hidden', elevation: 8 },
-  btn: {
-    paddingVertical: 22, alignItems: 'center',
-    justifyContent: 'center', gap: 8,
-  },
-  btnText: { color: Colors.white, fontWeight: '700', fontSize: 14 },
-  dimBtn:  { opacity: 0.35 },
+  btn:        { paddingVertical: 14, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  btnText:    { color: Colors.white, fontWeight: '700', fontSize: 12 },
+  dimBtn:     { opacity: 0.35 },
 });
