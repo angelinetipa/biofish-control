@@ -15,6 +15,8 @@ export default function App() {
 
   if (!user) return <LoginScreen onLogin={setUser} />;
 
+  const logout = () => setUser(null);
+
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -39,10 +41,14 @@ export default function App() {
         })}
       >
         <Tab.Screen name="Dashboard">
-          {() => <DashboardScreen user={user} onLogout={() => setUser(null)} />}
+          {() => <DashboardScreen user={user} onLogout={logout} />}
         </Tab.Screen>
-        <Tab.Screen name="Help" component={HelpScreen} />
-        <Tab.Screen name="Settings" component={SettingsScreen} />
+        <Tab.Screen name="Help">
+          {() => <HelpScreen onLogout={logout} />}
+        </Tab.Screen>
+        <Tab.Screen name="Settings">
+          {() => <SettingsScreen onLogout={logout} />}
+        </Tab.Screen>
       </Tab.Navigator>
     </NavigationContainer>
   );

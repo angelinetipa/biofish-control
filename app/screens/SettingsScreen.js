@@ -5,12 +5,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
+import AppHeader from '../components/AppHeader';
 import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
 
 // ─── Machine parameters (match ESP32 firmware v2.6 exactly) ────────────────────
-// key = machine_settings column. min/max/step/default mirror the .ino gParams[].
 const PARAMS = [
   { key: 'water_in_l',   label: 'Water In',    min: 0.5,  max: 10.0,  step: 0.05, unit: 'L',   def: 2.5   },
   { key: 'c1_mix_min',   label: 'C1 Mix Time', min: 1.0,  max: 240.0, step: 1.0,  unit: 'min', def: 240.0 },
@@ -29,14 +29,12 @@ const TEAM = [
   { name: 'Tipa',      role: 'Lead Developer' },
 ];
 
-const defaultValues = () =>
-  PARAMS.reduce((acc, p) => ({ ...acc, [p.key]: p.def }), {});
-
+const defaultValues = () => PARAMS.reduce((acc, p) => ({ ...acc, [p.key]: p.def }), {});
 const fmt = (p, v) => (p.step < 1 ? Number(v).toFixed(2) : Number(v).toFixed(0));
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ onLogout }) {
   const [values, setValues] = useState(defaultValues);
   const [dirty, setDirty]   = useState(false);
   const [saving, setSaving] = useState(false);
@@ -55,23 +53,20 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     let active = true;
-
     (async () => {
-      const { data } = await supabase
-        .from('machine_settings').select('*').eq('id', 1).single();
+      const { data } = await supabase.from('machine_settings').select('*').eq('id', 1).single();
       if (active && data) applyRow(data);
       if (active) setLoaded(true);
     })();
 
-    // Two-way sync: reflect machine-side changes, but never clobber unsaved edits.
     const channel = supabase
       .channel('machine_settings')
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'machine_settings' },
         (payload) => {
           const row = payload.new;
-          if (dirtyRef.current) return;          // user is mid-edit — keep their values
-          if (row.updated_by === 'app') return;  // ignore our own echo
+          if (dirtyRef.current) return;
+          if (row.updated_by === 'app') return;
           applyRow(row);
         }
       )
@@ -85,7 +80,7 @@ export default function SettingsScreen() {
       const p = PARAMS.find((x) => x.key === key);
       let v = Number(prev[key]) + dir * p.step;
       v = Math.min(p.max, Math.max(p.min, v));
-      v = Math.round(v / p.step) * p.step;            // snap to step, kill float drift
+      v = Math.round(v / p.step) * p.step;
       v = parseFloat(v.toFixed(2));
       return { ...prev, [key]: v };
     });
@@ -104,10 +99,7 @@ export default function SettingsScreen() {
 
   return (
     <BubbleBackground>
-      <View style={styles.header}>
-        <Text style={Theme.sectionHeader}>Settings</Text>
-        <Text style={Theme.sectionSub}>Machine parameters</Text>
-      </View>
+      <AppHeader subtitle="Machine parameters" onLogout={onLogout} channelKey="online-settings" />
 
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
 
@@ -119,11 +111,8 @@ export default function SettingsScreen() {
               <Text style={Theme.cardLabel}>Machine Parameters</Text>
             </View>
             <View style={[styles.syncPill, dirty ? styles.syncDirty : styles.syncOk]}>
-              <Ionicons
-                name={dirty ? 'ellipse' : 'checkmark-circle'}
-                size={11}
-                color={dirty ? '#D4840A' : Colors.teal}
-              />
+              <Ionicons name={dirty ? 'ellipse' : 'checkmark-circle'} size={11}
+                color={dirty ? '#D4840A' : Colors.teal} />
               <Text style={[styles.syncText, { color: dirty ? '#D4840A' : Colors.teal }]}>
                 {dirty ? 'Unsaved' : 'Synced'}
               </Text>
@@ -134,20 +123,14 @@ export default function SettingsScreen() {
             <View key={p.key} style={styles.paramRow}>
               <Text style={styles.paramLabel}>{p.label}</Text>
               <View style={styles.paramControl}>
-                <TouchableOpacity
-                  style={styles.adjBtn}
-                  onPress={() => adjust(p.key, -1)}
-                  disabled={!loaded || values[p.key] <= p.min}
-                >
+                <TouchableOpacity style={styles.adjBtn} onPress={() => adjust(p.key, -1)}
+                  disabled={!loaded || values[p.key] <= p.min}>
                   <Ionicons name="remove" size={16}
                     color={values[p.key] <= p.min ? Colors.textLight : Colors.statusRunning} />
                 </TouchableOpacity>
                 <Text style={styles.paramValue}>{fmt(p, values[p.key])} {p.unit}</Text>
-                <TouchableOpacity
-                  style={styles.adjBtn}
-                  onPress={() => adjust(p.key, 1)}
-                  disabled={!loaded || values[p.key] >= p.max}
-                >
+                <TouchableOpacity style={styles.adjBtn} onPress={() => adjust(p.key, 1)}
+                  disabled={!loaded || values[p.key] >= p.max}>
                   <Ionicons name="add" size={16}
                     color={values[p.key] >= p.max ? Colors.textLight : Colors.statusRunning} />
                 </TouchableOpacity>
@@ -218,8 +201,6 @@ export default function SettingsScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12 },
-
   cardHeadRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', marginBottom: 4,
@@ -240,8 +221,7 @@ const styles = StyleSheet.create({
   paramControl: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   adjBtn: {
     backgroundColor: Colors.inputBg, borderRadius: 10,
-    width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
-    elevation: 3,
+    width: 32, height: 32, alignItems: 'center', justifyContent: 'center', elevation: 3,
   },
   paramValue: {
     fontSize: 13, fontWeight: '700', color: Colors.statusRunning,
@@ -264,8 +244,7 @@ const styles = StyleSheet.create({
 
   sectionLabel: {
     fontSize: 11, fontWeight: '800', color: Colors.textMid,
-    letterSpacing: 0.8, textTransform: 'uppercase',
-    marginBottom: 10, marginTop: 4,
+    letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10, marginTop: 4,
   },
   memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   avatar: {

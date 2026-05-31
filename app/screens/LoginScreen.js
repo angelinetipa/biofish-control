@@ -14,6 +14,7 @@ export default function LoginScreen({ onLogin }) {
   const [password, setPassword]           = useState('');
   const [usernameFocused, setUserFocused] = useState(false);
   const [passwordFocused, setPassFocused] = useState(false);
+  const [showPassword, setShowPassword]   = useState(false);
   const [error, setError]                 = useState('');
 
   const handleLogin = () => {
@@ -34,7 +35,7 @@ export default function LoginScreen({ onLogin }) {
   return (
     <BubbleBackground>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="always">
           <View style={styles.card}>
 
             {/* Accent line */}
@@ -71,16 +72,30 @@ export default function LoginScreen({ onLogin }) {
             {/* Password */}
             <View style={styles.formGroup}>
               <Text style={styles.label}>PASSWORD</Text>
-              <TextInput
-                style={[styles.input, passwordFocused && styles.inputFocused]}
-                placeholder="Enter your password"
-                placeholderTextColor={Colors.textLight}
-                value={password}
-                onChangeText={t => { setPassword(t); setError(''); }}
-                onFocus={() => setPassFocused(true)}
-                onBlur={() => setPassFocused(false)}
-                secureTextEntry
-              />
+              <View style={styles.passWrap}>
+                <TextInput
+                  style={[styles.input, styles.inputPass, passwordFocused && styles.inputFocused]}
+                  placeholder="Enter your password"
+                  placeholderTextColor={Colors.textLight}
+                  value={password}
+                  onChangeText={t => { setPassword(t); setError(''); }}
+                  onFocus={() => setPassFocused(true)}
+                  onBlur={() => setPassFocused(false)}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(v => !v)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  style={styles.eyeBtn}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={18}
+                    color={Colors.textMid}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -160,6 +175,13 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? 13 : 10,
     fontSize: 13, color: Colors.textDark,
     borderWidth: 2, borderColor: 'transparent',
+  },
+  // Password field: normal input + eye icon floated on top (absolute)
+  passWrap: { position: 'relative', justifyContent: 'center' },
+  inputPass: { paddingRight: 44 },
+  eyeBtn: {
+    position: 'absolute', right: 8, top: 0, bottom: 0,
+    justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6,
   },
   inputFocused: {
     borderColor: Colors.inputFocusBorder,

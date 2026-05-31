@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
+import AppHeader from '../components/AppHeader';
 import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
 
@@ -11,7 +12,7 @@ const HOW_TO_USE = [
   { step: '1', title: 'Power On',        desc: 'Turn on the BIO-FISH machine and wait for it to initialize.' },
   { step: '2', title: 'Configure',       desc: 'Go to Settings and set your parameters (water volume, temp, glycerin %, etc.).' },
   { step: '3', title: 'Start Cycle',     desc: 'Tap Start on the Dashboard. The machine runs 4 stages automatically.' },
-  { step: '4', title: 'Monitor',         desc: 'Watch live temp, timer, and LCD display on the Dashboard.' },
+  { step: '4', title: 'Monitor',         desc: 'Watch live temp, timer, and process log on the Dashboard.' },
   { step: '5', title: 'Collect Output',  desc: 'After Stage 4 (Formation), collect the bioplastic sheet from the tray.' },
   { step: '6', title: 'Clean',           desc: 'Tap Clean after every cycle to flush all pumps.' },
 ];
@@ -31,11 +32,11 @@ const FAQS = [
   },
   {
     q: 'What does the ultrasonic sensor do?',
-    a: 'It checks the liquid volume in Container 3 before the glycerin pump fires. If volume is out of range (1900–2500 mL), it retries 3 times before halting.',
+    a: 'It checks the liquid volume in Container 3 before the glycerin pump fires. If volume is out of range (1500–2500 mL), it retries 3 times before halting for your decision.',
   },
   {
     q: 'What if the machine stops unexpectedly?',
-    a: 'Check the LCD display on the Dashboard for the last known status. Press Stop to reset, then restart the cycle.',
+    a: 'Check the Process Log on the Dashboard for the last known status. Press E-Stop to reset, then restart the cycle.',
   },
 ];
 
@@ -63,13 +64,10 @@ function AccordionItem({ question, answer }) {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
-export default function HelpScreen() {
+export default function HelpScreen({ onLogout }) {
   return (
     <BubbleBackground>
-      <View style={styles.header}>
-        <Text style={Theme.sectionHeader}>Help & Guide</Text>
-        <Text style={Theme.sectionSub}>How to use BIO-FISH</Text>
-      </View>
+      <AppHeader subtitle="Help & Guide" onLogout={onLogout} channelKey="online-help" />
 
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
 
@@ -128,8 +126,6 @@ export default function HelpScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12 },
-
   stepRow: {
     flexDirection: 'row', gap: 14, marginBottom: 16, alignItems: 'flex-start',
   },
