@@ -72,16 +72,6 @@ const DEMO = [
   { s: 'COMPLETE', st: 3 },
 ];
 
-// Cleaning timeline — all timed (no decisions), flushes through every stage.
-const CLEAN = [
-  { st: 0, sub: 'Clean: Pump1 flush',   dur: 4, c1: 45, heat1: true },
-  { st: 0, sub: 'Clean: C1 flush',      dur: 4, c1: 45, heat1: true },
-  { st: 1, sub: 'Clean: Pump2 flush',   dur: 3 },
-  { st: 1, sub: 'Clean: Pump3 flush',   dur: 3 },
-  { st: 2, sub: 'Clean: Pump4 flush',   dur: 3 },
-  { st: 2, sub: 'Clean: C3 flush',      dur: 4, c3: 45, heat3: true },
-  { st: 3, sub: 'Clean: Pump5 → Tray',  dur: 4 },
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -297,13 +287,14 @@ export default function DashboardScreen({ onLogout }) {
 
   const demoRef = useRef(false);
   const dmRef   = useRef({ idx: 0, rem: 0, paused: false, mode: 'idle',
-                           trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cidx: 0, crem: 0 });
+                           trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cleaning: false });
 
   const status      = machine.status || 'IDLE';
   const meta        = STATUS_META[status] ?? STATUS_META.IDLE;
   const isActive    = ACTIVE_STATES.includes(status);
   const isRunning   = status === 'RUNNING';
   const isPaused    = status === 'PAUSED';
+  const isCleaning  = status === 'CLEANING';
   const hasDecision = ['OVERRUN', 'GUARDIAN_WAIT', 'TRAY_WAIT'].includes(status);
   const stageIdx    = status === 'COMPLETE' ? STAGES.length : (machine.stage_index ?? 0);
 
@@ -350,32 +341,11 @@ export default function DashboardScreen({ onLogout }) {
   const demoTick = useCallback(() => {
     const dm = dmRef.current;
     if (dm.mode === 'estop')  { setMachine(demoSnap({ status: 'ESTOP' })); return; }
-    if (dm.mode === 'clean') {
-      dm.crem -= 1;
-      if (dm.crem < 0) {
-        dm.cidx += 1;
-        const ns = CLEAN[dm.cidx];
-        if (ns) dm.crem = ns.dur; else dm.mode = 'cleandone';
-      }
-      const cur = CLEAN[dm.cidx];
-      if (dm.mode === 'clean' && cur) {
-        setMachine(demoSnap({
-          status: 'CLEANING', stage_index: cur.st, substep: cur.sub,
-          timer_remaining_s: Math.max(0, dm.crem),
-          c1_temp: cur.c1 ?? 40, c3_temp: cur.c3 ?? 40,
-          c1_heater: !!cur.heat1, c3_heater: !!cur.heat3,
-        }));
-        return;
-      }
-    }
-    if (dm.mode === 'cleandone') {
-      setMachine(demoSnap({ status: 'COMPLETE', stage_index: 3, substep: 'Cleaning complete' }));
-      return;
-    }
     if (dm.mode === 'idle')   { setMachine(demoSnap({ status: 'IDLE' })); return; }
 
     let step = DEMO[dm.idx];
     if (step.s === 'TRAY') {
+      if (dm.cleaning) { dm.idx += 1; demoTick(); return; }  // cleaning skips manual trays
       if (dm.trayPhase === 'dispensing') dm.trayElapsed += 1;
       setMachine(demoSnap({
         status: 'TRAY_WAIT', stage_index: step.st, substep: 'Film formation — trays',
@@ -383,7 +353,13 @@ export default function DashboardScreen({ onLogout }) {
       }));
       return;
     }
-    if (step.s === 'COMPLETE') { setMachine(demoSnap({ status: 'COMPLETE', stage_index: step.st })); return; }
+    if (step.s === 'COMPLETE') {
+      setMachine(demoSnap({
+        status: 'COMPLETE', stage_index: step.st,
+        substep: dm.cleaning ? 'Cleaning complete' : '',
+      }));
+      return;
+    }
 
     if ((step.dur || 0) > 0) {
       if (!dm.paused) {
@@ -391,8 +367,10 @@ export default function DashboardScreen({ onLogout }) {
         if (dm.rem < 0) { dm.idx += 1; const ns = DEMO[dm.idx]; dm.rem = (ns && ns.dur) ? ns.dur : 0; }
       }
       const cur = DEMO[dm.idx];
+      const runStatus = dm.paused ? 'PAUSED' : (dm.cleaning ? 'CLEANING' : 'RUNNING');
       setMachine(demoSnap({
-        status: dm.paused ? 'PAUSED' : 'RUNNING', stage_index: cur.st, substep: cur.sub,
+        status: runStatus, stage_index: cur.st,
+        substep: dm.cleaning ? ('Clean: ' + cur.sub) : cur.sub,
         timer_remaining_s: Math.max(0, dm.rem),
         c1_temp: cur.c1 ?? 30, c3_temp: cur.c3 ?? 30,
         c1_heater: !!cur.heat1, c3_heater: !!cur.heat3, c1_fan: !!cur.fan1, c3_fan: !!cur.fan3,
@@ -401,10 +379,13 @@ export default function DashboardScreen({ onLogout }) {
     }
 
     // decision step (OVERRUN / GUARDIAN_WAIT)
+    if (dm.cleaning) { dm.idx += 1; const ns = DEMO[dm.idx]; dm.rem = (ns && ns.dur) ? ns.dur : 0; demoTick(); return; }
     setMachine(demoSnap({
       status: step.s, stage_index: step.st, substep: step.sub,
       c1_temp: step.c1 ?? 30, c3_temp: step.c3 ?? 30,
-      decision_pending: step.s === 'OVERRUN' ? 'overrun' : 'guardian',
+      decision_pending: step.s === 'OVERRUN'
+        ? 'overrun'
+        : (dm.guardianHalt ? 'guardian_halt' : 'guardian'),
       guardian_volume_ml: step.vol ?? null,
       guardian_distance_cm: step.dist ?? null,
       guardian_attempt: step.att ?? null,
@@ -415,17 +396,29 @@ export default function DashboardScreen({ onLogout }) {
     const dm = dmRef.current;
     switch (cmd) {
       case 'start':
-        dm.mode = 'run'; dm.idx = 0; dm.rem = DEMO[0].dur; dm.paused = false;
+        dm.mode = 'run'; dm.cleaning = false; dm.guardianHalt = false; dm.idx = 0; dm.rem = DEMO[0].dur; dm.paused = false;
         dm.trayPhase = 'waiting'; dm.trayCount = 0; dm.trayElapsed = 0; break;
       case 'pause':  dm.paused = true; break;
       case 'resume': dm.paused = false; break;
       case 'estop':  dm.mode = 'estop'; break;
-      case 'clean':  dm.mode = 'clean'; dm.cidx = 0; dm.crem = CLEAN[0].dur; break;
+      case 'clean':  dm.mode = 'run'; dm.cleaning = true; dm.guardianHalt = false; dm.idx = 0; dm.rem = DEMO[0].dur; dm.paused = false;
+                     dm.trayPhase = 'waiting'; dm.trayCount = 0; dm.trayElapsed = 0; break;
       case 'resume_overrun':
       case 'guardian_continue':
       case 'guardian_skip':
+        dm.guardianHalt = false;
         dm.idx += 1; dm.rem = DEMO[dm.idx].dur || 0; break;
-      case 'guardian_retry': break;
+      case 'guardian_retry': {
+        const step = DEMO[dm.idx];
+        if (step && step.s === 'GUARDIAN_WAIT') {
+          step.att = (step.att || 1) + 1;
+          // new pseudo-random reading in a believable range
+          step.vol = Math.round(1400 + Math.random() * 1200);          // 1400–2600 mL
+          step.dist = parseFloat((8 + Math.random() * 6).toFixed(2));  // 8–14 cm
+          if (step.att >= 3) dm.guardianHalt = true;
+        }
+        break;
+      }
       case 'tray_start': dm.trayPhase = 'dispensing'; dm.trayElapsed = 0; break;
       case 'tray_stop':  dm.trayPhase = 'stopped'; break;
       case 'tray_more':  dm.trayPhase = 'dispensing'; break;
@@ -448,7 +441,7 @@ export default function DashboardScreen({ onLogout }) {
     setDemo(on);
     if (on) {
       dmRef.current = { idx: 0, rem: 0, paused: false, mode: 'idle',
-                        trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cidx: 0, crem: 0 };
+                        trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cleaning: false };
       demoTick();
     } else {
       fetchStatus();
@@ -468,7 +461,7 @@ export default function DashboardScreen({ onLogout }) {
       onPress: () => sendCommand('start'), disabled: isActive || loading },
     { label: isPaused ? 'Resume' : 'Pause', icon: isPaused ? 'play-circle-outline' : 'pause',
       colors: ['#F0A030', '#D4840A'], onPress: () => sendCommand(isPaused ? 'resume' : 'pause'),
-      disabled: !(isRunning || isPaused) || loading },
+      disabled: !(isRunning || isPaused || isCleaning) || loading },
     { label: 'E-Stop', icon: 'stop-circle-outline', colors: ['#D9534F', '#B83230'],
       onPress: () => sendCommand('estop'), disabled: !isActive || loading },
     { label: 'Clean', icon: 'water-outline', colors: ['#4A7FD4', '#2E63B8'],
@@ -594,7 +587,7 @@ export default function DashboardScreen({ onLogout }) {
         {/* ── Control Buttons 2×2 ── */}
         <View style={Theme.card}>
           <View style={styles.cardHeadRow}>
-            <View style={Theme.cardLabelRow}>
+            <View style={[Theme.cardLabelRow, { marginBottom: 0 }]}>
               <Ionicons name="flash-outline" size={13} color={Colors.textMid} />
               <Text style={Theme.cardLabel}>Machine Control</Text>
             </View>
@@ -669,7 +662,7 @@ const styles = StyleSheet.create({
 
   scroll: { padding: 16, paddingBottom: 120, gap: 14 },
 
-  cardHeadRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardHeadRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
   demoPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20,
