@@ -72,6 +72,17 @@ const DEMO = [
   { s: 'COMPLETE', st: 3 },
 ];
 
+// Cleaning timeline — all timed (no decisions), flushes through every stage.
+const CLEAN = [
+  { st: 0, sub: 'Clean: Pump1 flush',   dur: 4, c1: 45, heat1: true },
+  { st: 0, sub: 'Clean: C1 flush',      dur: 4, c1: 45, heat1: true },
+  { st: 1, sub: 'Clean: Pump2 flush',   dur: 3 },
+  { st: 1, sub: 'Clean: Pump3 flush',   dur: 3 },
+  { st: 2, sub: 'Clean: Pump4 flush',   dur: 3 },
+  { st: 2, sub: 'Clean: C3 flush',      dur: 4, c3: 45, heat3: true },
+  { st: 3, sub: 'Clean: Pump5 → Tray',  dur: 4 },
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatTime(secs) {
@@ -286,7 +297,7 @@ export default function DashboardScreen({ onLogout }) {
 
   const demoRef = useRef(false);
   const dmRef   = useRef({ idx: 0, rem: 0, paused: false, mode: 'idle',
-                           trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cleanRem: 0 });
+                           trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cidx: 0, crem: 0 });
 
   const status      = machine.status || 'IDLE';
   const meta        = STATUS_META[status] ?? STATUS_META.IDLE;
@@ -339,10 +350,27 @@ export default function DashboardScreen({ onLogout }) {
   const demoTick = useCallback(() => {
     const dm = dmRef.current;
     if (dm.mode === 'estop')  { setMachine(demoSnap({ status: 'ESTOP' })); return; }
-    if (dm.mode === 'clean')  {
-      dm.cleanRem -= 1;
-      if (dm.cleanRem <= 0) { dm.mode = 'idle'; }
-      else { setMachine(demoSnap({ status: 'CLEANING', substep: 'Cleaning cycle', timer_remaining_s: dm.cleanRem })); return; }
+    if (dm.mode === 'clean') {
+      dm.crem -= 1;
+      if (dm.crem < 0) {
+        dm.cidx += 1;
+        const ns = CLEAN[dm.cidx];
+        if (ns) dm.crem = ns.dur; else dm.mode = 'cleandone';
+      }
+      const cur = CLEAN[dm.cidx];
+      if (dm.mode === 'clean' && cur) {
+        setMachine(demoSnap({
+          status: 'CLEANING', stage_index: cur.st, substep: cur.sub,
+          timer_remaining_s: Math.max(0, dm.crem),
+          c1_temp: cur.c1 ?? 40, c3_temp: cur.c3 ?? 40,
+          c1_heater: !!cur.heat1, c3_heater: !!cur.heat3,
+        }));
+        return;
+      }
+    }
+    if (dm.mode === 'cleandone') {
+      setMachine(demoSnap({ status: 'COMPLETE', stage_index: 3, substep: 'Cleaning complete' }));
+      return;
     }
     if (dm.mode === 'idle')   { setMachine(demoSnap({ status: 'IDLE' })); return; }
 
@@ -392,7 +420,7 @@ export default function DashboardScreen({ onLogout }) {
       case 'pause':  dm.paused = true; break;
       case 'resume': dm.paused = false; break;
       case 'estop':  dm.mode = 'estop'; break;
-      case 'clean':  dm.mode = 'clean'; dm.cleanRem = 6; break;
+      case 'clean':  dm.mode = 'clean'; dm.cidx = 0; dm.crem = CLEAN[0].dur; break;
       case 'resume_overrun':
       case 'guardian_continue':
       case 'guardian_skip':
@@ -420,7 +448,7 @@ export default function DashboardScreen({ onLogout }) {
     setDemo(on);
     if (on) {
       dmRef.current = { idx: 0, rem: 0, paused: false, mode: 'idle',
-                        trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cleanRem: 0 };
+                        trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cidx: 0, crem: 0 };
       demoTick();
     } else {
       fetchStatus();
@@ -448,7 +476,6 @@ export default function DashboardScreen({ onLogout }) {
   ];
 
   const showSubstep   = isActive && !!machine.substep;
-  const showRemaining = isActive && (machine.timer_remaining_s ?? 0) > 0;
   const logEntries    = Array.isArray(machine.process_log) ? machine.process_log : [];
 
   return (
@@ -494,24 +521,16 @@ export default function DashboardScreen({ onLogout }) {
             </View>
             <View style={styles.timerBadge}>
               <Ionicons name="timer-outline" size={12} color={Colors.textMid} />
-              <Text style={styles.timerText}>{formatTime(machine.elapsed_secs)}</Text>
+              <Text style={styles.timerText}>{formatTime(isActive && (machine.timer_remaining_s ?? 0) > 0 ? machine.timer_remaining_s : machine.elapsed_secs)}</Text>
             </View>
           </View>
 
-          {(showSubstep || showRemaining) && (
+          {showSubstep && (
             <View style={styles.substepRow}>
-              {showSubstep && (
-                <View style={styles.substepLeft}>
-                  <Ionicons name="ellipse" size={7} color={meta.color} />
-                  <Text style={styles.substepText} numberOfLines={1}>{machine.substep}</Text>
-                </View>
-              )}
-              {showRemaining && (
-                <View style={styles.remainBadge}>
-                  <Ionicons name="hourglass-outline" size={11} color={Colors.textMid} />
-                  <Text style={styles.remainText}>{formatTime(machine.timer_remaining_s)}</Text>
-                </View>
-              )}
+              <View style={styles.substepLeft}>
+                <Ionicons name="ellipse" size={7} color={meta.color} />
+                <Text style={styles.substepText} numberOfLines={1}>{machine.substep}</Text>
+              </View>
             </View>
           )}
 
