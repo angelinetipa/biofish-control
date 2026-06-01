@@ -109,7 +109,7 @@ export default function LearnScreen({ onLogout }) {
             conventional single-use plastic in real-world packaging applications.
           </Text>
 
-          <Photo source={COMPOST_IMG} caption="Compost bag packaged using BIO-FISH bioplastic film — produced in collaboration with CEMO, City Government of Marikina" icon="bag-outline" height={320} />
+          <Photo source={COMPOST_IMG} caption="Compost bag packaged using BIO-FISH bioplastic film — produced in collaboration with CEMO, City Government of Marikina" icon="bag-outline" height={350} />
 
           {[
             {
@@ -175,10 +175,15 @@ Secant Modulus`}</Text>
             </View>
           </View>
 
+          <View style={styles.explainBox}>
+            <Text style={styles.explainRow}><Text style={styles.explainKey}>15.6 MPa tensile strength</Text> — how much force the film can handle before tearing. Higher = stronger.</Text>
+            <Text style={styles.explainRow}><Text style={styles.explainKey}>30.1% elongation</Text> — how far the film stretches before it breaks. Higher = more flexible.</Text>
+            <Text style={styles.explainRow}><Text style={styles.explainKey}>~220 MPa secant modulus</Text> — how stiff the film is under load. Higher = less stretchy at rest.</Text>
+            <Text style={styles.explainRow}><Text style={styles.explainKey}>406.7% water absorption</Text> — the film absorbs a lot of water (expected for gelatin). Limit use in wet conditions.</Text>
+          </View>
           <Text style={styles.bodyText}>
-            The films were described as thin, smooth, flexible, and translucent — light blue to
-            transparent in color. Swelling and discoloration were observed after the 24-hour
-            water immersion test, consistent with the hydrophilic nature of gelatin-based films.
+            The films appeared thin, smooth, flexible, and translucent — light blue to transparent.
+            Swelling and discoloration after 24h immersion are expected for gelatin-based films.
           </Text>
           <Text style={styles.cite}>
             (DOST-ITDI Standards and Testing Division, Taguig City, May 13, 2026)
@@ -264,4 +269,7 @@ const styles = StyleSheet.create({
   useBody:  { flex: 1 },
   useTitle: { fontSize: 13, fontWeight: '700', color: Colors.dark, marginBottom: 2 },
   useDesc:  { fontSize: 12, color: Colors.textMid, lineHeight: 18 },
+  explainBox: { backgroundColor: Colors.inputBg, borderRadius: 12, padding: 12, marginBottom: 12, gap: 8 },
+  explainRow: { fontSize: 12, color: Colors.textMid, lineHeight: 18 },
+  explainKey: { fontWeight: '700', color: Colors.dark },
 });

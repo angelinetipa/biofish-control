@@ -32,11 +32,15 @@ const FAQS = [
   },
   {
     q: 'What does the ultrasonic sensor do?',
-    a: 'It checks the liquid volume in Container 3 before the glycerin pump fires. If volume is out of range (1500–2500 mL), it retries 3 times before halting for your decision.',
+    a: 'It checks the liquid volume in Container 3 before the glycerin pump fires. If the volume is outside the 1500–2500 mL range, it retries up to 3 times, then shows a decision card on the Dashboard asking you to retry, skip, or stop.',
   },
   {
     q: 'What if the machine stops unexpectedly?',
-    a: 'Check the Process Log on the Dashboard for the last known status. Press E-Stop to reset, then restart the cycle.',
+    a: 'Check the Process Log on the Dashboard for the last known status. Tap E-Stop on the Dashboard to reset, then restart the cycle. Check the Process Log for the last recorded step.',
+  },
+  {
+    q: 'What is Demo Mode?',
+    a: 'Demo Mode simulates a full production run without needing the ESP32 machine. Toggle it on in the Machine Control card on the Dashboard. Useful for testing the app and showing the panel how the interface works.',
   },
 ];
 

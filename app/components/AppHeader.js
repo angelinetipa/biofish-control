@@ -50,46 +50,44 @@ export default function AppHeader({
   const label = statusLabel || (isOnline ? 'Online' : 'Offline');
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.brand}>
-        <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.logo} />
-        <View style={styles.titleBlock}>
+    <View style={styles.container}>
+      <View style={styles.wrap}>
+        <View style={styles.brand}>
+          <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.logo} />
           <Text style={styles.title} numberOfLines={1}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
+        </View>
+        <View style={styles.right}>
+          <View style={[styles.pill, isOnline ? styles.on : styles.off]}>
+            <View style={[styles.dot, { backgroundColor: isOnline ? '#3DBFB8' : Colors.textLight }]} />
+            <Text style={styles.pillText}>{label}</Text>
+          </View>
+          {onLogout && (
+            <TouchableOpacity style={styles.logout} onPress={onLogout} activeOpacity={0.8}>
+              <Ionicons name="log-out-outline" size={16} color={Colors.white} />
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
-
-      <View style={styles.right}>
-        <View style={[styles.pill, isOnline ? styles.on : styles.off]}>
-          <View style={[styles.dot, { backgroundColor: isOnline ? '#3DBFB8' : Colors.textLight }]} />
-          <Text style={styles.pillText}>{label}</Text>
-        </View>
-        {onLogout && (
-          <TouchableOpacity style={styles.logout} onPress={onLogout} activeOpacity={0.8}>
-            <Ionicons name="log-out-outline" size={16} color={Colors.white} />
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { paddingHorizontal: 16, paddingTop: 52, paddingBottom: 10 },
   wrap: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12,
+    marginBottom: 2,
   },
-  // Shared header-logo style (small, subtle lift) — same on every tab.
   logo: {
     width: 36, height: 36, borderRadius: 10, marginRight: 12,
     shadowColor: '#2C6B7F', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25, shadowRadius: 4, elevation: 4,
   },
-  brand:      { flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 12 },
-  titleBlock: { flex: 1 },
-  title:      { color: Colors.white, fontWeight: '900', fontSize: 22, letterSpacing: 0.5 },
-  subtitle:   { color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 },
+  brand:    { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  title:    { color: Colors.white, fontWeight: '900', fontSize: 22, letterSpacing: 0.5 },
+  subtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginLeft: 48 },
 
   right: { flexDirection: 'row', alignItems: 'center' },
   pill: {

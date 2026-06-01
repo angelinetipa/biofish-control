@@ -93,12 +93,9 @@ export default function LoginScreen({ onLogin }) {
             </TouchableOpacity>
 
             {/* Note */}
-            <View style={styles.noteCard}>
-              <Ionicons name="information-circle-outline" size={13} color={Colors.blue} />
-              <Text style={styles.noteText}>
-                The PIN limits machine control to authorized operators.
-              </Text>
-            </View>
+            <Text style={styles.noteInline}>
+              PIN required to access machine controls.
+            </Text>
 
           </View>
         </ScrollView>
@@ -166,11 +163,5 @@ const styles = StyleSheet.create({
   },
   btnText: { color: Colors.white, fontSize: 13, fontWeight: '700', letterSpacing: 0.4 },
 
-  noteCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginHorizontal: 20, marginTop: 14, padding: 10,
-    backgroundColor: Colors.demoBg, borderRadius: 14,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.85)',
-  },
-  noteText: { flex: 1, fontSize: 10, color: Colors.textLight, lineHeight: 14 },
+  noteInline: { textAlign: 'center', fontSize: 10, color: Colors.textLight, marginTop: 14, marginHorizontal: 20 },
 });

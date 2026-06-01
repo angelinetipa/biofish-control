@@ -346,19 +346,19 @@ export default function DashboardScreen({ onLogout }) {
       firmware_version: 'DEMO', last_seen: new Date().toISOString(), ...over };
     // Build a realistic process log from current state
     const log = [];
-    if (state.status === 'COMPLETE')   log.push('Cycle complete — bioplastic film ready.');
-    if (state.status === 'ESTOP')      log.push('Emergency stop triggered.');
-    if (state.status === 'CLEANING')   log.push(state.substep || 'Cleaning cycle running…');
-    if (state.status === 'OVERRUN')    log.push('⚠ Temp cutoff at 75°C — heater off. Awaiting operator.');
-    if (state.status === 'GUARDIAN_WAIT') log.push('Volume check: ' + (state.guardian_volume_ml ? Math.round(state.guardian_volume_ml) + ' mL measured.' : 'Measuring…'));
-    if (state.status === 'TRAY_WAIT')  log.push('Stage 4: dispensing into trays. Tray #' + ((state.tray_count || 0) + 1));
-    if (state.status === 'RUNNING' && state.substep) log.push(state.substep);
-    if (state.status === 'PAUSED')     log.push('Process paused by operator.');
-    if (state.status === 'IDLE')       log.push('Machine idle. Tap Start to begin.');
-    if (state.stage_index >= 3) log.push('Stage 3 complete — formulation done.');
-    if (state.stage_index >= 2) log.push('Stage 2 complete — filtration done.');
-    if (state.stage_index >= 1) log.push('Stage 1 complete — extraction done.');
-    log.push('[Demo Mode]');
+    if (state.status === 'COMPLETE')      log.push('✓ Cycle complete — bioplastic film ready for collection.');
+    if (state.status === 'ESTOP')          log.push('✕ Emergency stop — cycle halted by operator.');
+    if (state.status === 'CLEANING')       log.push('↻ ' + (state.substep || 'Cleaning: flushing pumps and containers.'));
+    if (state.status === 'OVERRUN')        log.push('⚠ C1 reached 75°C cutoff — heater off, awaiting operator decision.');
+    if (state.status === 'GUARDIAN_WAIT')  log.push('⊙ Volume sensor read ' + (state.guardian_volume_ml ? Math.round(state.guardian_volume_ml) + ' mL' : '—') + ' — operator confirmation needed.');
+    if (state.status === 'TRAY_WAIT')      log.push('⊡ Dispensing tray #' + ((state.tray_count || 0) + 1) + ' — pump running until operator stops it.');
+    if (state.status === 'RUNNING' && state.substep) log.push('▶ ' + state.substep);
+    if (state.status === 'PAUSED')         log.push('‖ Process paused — tap Resume to continue.');
+    if (state.status === 'IDLE')           log.push('◌ Machine idle — ready to start a new cycle.');
+    if (state.stage_index >= 3) log.push('✓ Stage 3: Formulation complete — glycerin mixed in.');
+    if (state.stage_index >= 2) log.push('✓ Stage 2: Filtration complete — liquid transferred.');
+    if (state.stage_index >= 1) log.push('✓ Stage 1: Extraction complete — gelatin released.');
+    log.push('ℹ Demo mode — simulating machine behavior.');
     return { ...state, process_log: log };
   };
 
