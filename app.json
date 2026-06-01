@@ -4,25 +4,35 @@
     "slug": "biofish",
     "version": "2.6.0",
     "orientation": "portrait",
-    "icon": "./assets/BIOFISH_LOGO.png",
+    "icon": "./assets/BIOFISH_LOGO_SQUARE.png",
     "scheme": "biofish",
     "splash": {
       "image": "./assets/BIOFISH_LOGO.png",
       "resizeMode": "contain",
       "backgroundColor": "#2C6B7F"
     },
-    "assetBundlePatterns": ["**/*"],
-    "ios": { "supportsTablet": true },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/BIOFISH_LOGO.png",
         "backgroundColor": "#2C6B7F"
       },
-      "usesCleartextTraffic": false
+      "usesCleartextTraffic": false,
+      "package": "com.angelinetipa.biofish"
     },
     "web": {
       "favicon": "./assets/BIOFISH_LOGO.png",
       "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5bf65d6a-6da9-4e88-841f-7ed67a70b555"
+      }
     }
   }
 }

@@ -143,8 +143,8 @@ const styles = StyleSheet.create({
   logoSection: { alignItems: 'center', marginBottom: 20, paddingHorizontal: 20 },
   logoGlow: {
     borderRadius: 20, marginBottom: 12,
-    shadowColor: '#fff', shadowOffset: { width: -5, height: -5 },
-    shadowOpacity: 0.7, shadowRadius: 14, elevation: 8,
+    shadowColor: '#5DD9D2', shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8, shadowRadius: 18, elevation: 10,
   },
   logo:    { width: 72, height: 72, borderRadius: 16 },
   appName: { fontSize: 28, fontWeight: '900', color: Colors.dark, marginBottom: 4, letterSpacing: 1 },

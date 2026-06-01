@@ -96,7 +96,9 @@ const styles = StyleSheet.create({
   // Row 1
   row:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand:     { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 8 },
-  logo:      { width: 42, height: 42, borderRadius: 10 },
+  logo:      { width: 42, height: 42, borderRadius: 10,
+    shadowColor: '#fff', shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5, shadowRadius: 8, elevation: 6 },
   textBlock: { flex: 1 },
   title:     { color: Colors.white, fontWeight: '900', fontSize: 22, letterSpacing: 0.5 },
   subtitle:  { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 1 },

@@ -54,11 +54,13 @@ export default function SplashScreen({ onDone }) {
         style={StyleSheet.absoluteFill}
       />
 
-      <Animated.Image
-        source={require('../../assets/BIOFISH_LOGO.png')}
-        style={[styles.logo, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}
-        resizeMode="contain"
-      />
+      <Animated.View style={[styles.logoGlow, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}>
+        <Image
+          source={require('../../assets/BIOFISH_LOGO.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </Animated.View>
 
       <Animated.View style={[styles.textBlock, { opacity: textOpacity, transform: [{ translateY: textSlide }] }]}>
         <Text style={styles.title}>BIO-FISH</Text>
@@ -74,10 +76,12 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     zIndex: 999,
   },
+  logoGlow: {
+    marginBottom: 28,
+    borderRadius: 30,
+  },
   logo: {
     width: 120, height: 120, borderRadius: 30,
-    marginBottom: 28,
-
   },
   textBlock: { alignItems: 'center' },
   title: {
