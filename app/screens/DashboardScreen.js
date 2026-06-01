@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Alert } from 'react-native';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   Image, ScrollView, RefreshControl,
@@ -481,16 +480,6 @@ export default function DashboardScreen({ onLogout }) {
   };
 
 
-  const confirmLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to log out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: onLogout },
-      ]
-    );
-  };
 
   const BUTTONS = [
     { label: 'Start', icon: 'play', colors: ['#3DBFB8', '#2A9E97'],
@@ -513,7 +502,7 @@ export default function DashboardScreen({ onLogout }) {
       <AppHeader
         title="Dashboard"
         subtitle="Monitor & control"
-        onLogout={confirmLogout}
+        onLogout={onLogout}
         online={online}
         statusLabel={demo ? 'Demo' : (online ? 'Online' : 'Offline')}
       />

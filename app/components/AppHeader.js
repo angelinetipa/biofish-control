@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { supabase } from '../lib/supabase';
@@ -37,6 +37,17 @@ export default function AppHeader({
   channelKey = 'online-header', online, statusLabel,
 }) {
   const manageOwn = online === undefined;
+
+  const confirmLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to log out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', style: 'destructive', onPress: onLogout },
+      ]
+    );
+  };
   const internalOnline = useMachineOnline(channelKey, manageOwn);
   const isOnline = manageOwn ? internalOnline : online;
   const label = statusLabel || (isOnline ? 'Online' : 'Offline');
@@ -48,9 +59,7 @@ export default function AppHeader({
 
         {/* Logo spans title + subtitle */}
         <View style={styles.brand}>
-          <View style={styles.logoGlow}>
-            <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.logo} />
-          </View>
+          <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.logo} />
           <View style={styles.textBlock}>
             <Text style={styles.title}>{title}</Text>
             {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
@@ -64,7 +73,7 @@ export default function AppHeader({
             <Text style={styles.pillText}>{label}</Text>
           </View>
           {onLogout && (
-            <TouchableOpacity style={styles.logout} onPress={onLogout} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.logout} onPress={confirmLogout} activeOpacity={0.8}>
               <Ionicons name="log-out-outline" size={16} color={Colors.white} />
               <Text style={styles.logoutText}>Logout</Text>
             </TouchableOpacity>
@@ -83,16 +92,7 @@ const styles = StyleSheet.create({
   // Row 1
   row:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand:     { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 8 },
-  logoGlow: {
-    borderRadius: 10,
-    shadowColor: '#fff', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1, shadowRadius: 20,
-    elevation: 20, backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  logo: { width: 42, height: 42, borderRadius: 10,
-    shadowColor: '#fff', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1, shadowRadius: 20, elevation: 20,
-  },
+  logo:      { width: 42, height: 42, borderRadius: 10 },
   textBlock: { flex: 1 },
   title:     { color: Colors.white, fontWeight: '900', fontSize: 22, letterSpacing: 0.5 },
   subtitle:  { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 1 },
