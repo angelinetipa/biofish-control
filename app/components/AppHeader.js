@@ -6,12 +6,14 @@ import { supabase } from '../lib/supabase';
 
 const OFFLINE_MS = 15000;
 
-// Shared online indicator — each header subscribes with its own channel key.
-function useMachineOnline(channelKey) {
+// Online indicator. `enabled=false` skips the subscription (used when the
+// parent already tracks machine state, e.g. Dashboard with Demo Mode).
+function useMachineOnline(channelKey, enabled) {
   const [lastSeen, setLastSeen] = useState(0);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     (async () => {
       const { data } = await supabase
@@ -29,28 +31,38 @@ function useMachineOnline(channelKey) {
 
     const tick = setInterval(() => setNow(Date.now()), 5000);
     return () => { active = false; supabase.removeChannel(channel); clearInterval(tick); };
-  }, [channelKey]);
+  }, [channelKey, enabled]);
 
   return lastSeen > 0 && (now - lastSeen) < OFFLINE_MS;
 }
 
-export default function AppHeader({ title = 'BIO-FISH', subtitle, onLogout, channelKey = 'online-header' }) {
-  const online = useMachineOnline(channelKey);
+export default function AppHeader({
+  title = 'BIO-FISH',
+  subtitle,
+  onLogout,
+  channelKey = 'online-header',
+  online,        // optional override (boolean). If set, internal subscription is skipped.
+  statusLabel,   // optional text override (e.g. 'Demo')
+}) {
+  const manageOwn = online === undefined;
+  const internalOnline = useMachineOnline(channelKey, manageOwn);
+  const isOnline = manageOwn ? internalOnline : online;
+  const label = statusLabel || (isOnline ? 'Online' : 'Offline');
 
   return (
     <View style={styles.wrap}>
       <View style={styles.brand}>
         <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.logo} />
         <View style={styles.titleBlock}>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
         </View>
       </View>
 
       <View style={styles.right}>
-        <View style={[styles.pill, online ? styles.on : styles.off]}>
-          <View style={[styles.dot, { backgroundColor: online ? '#3DBFB8' : Colors.textLight }]} />
-          <Text style={styles.pillText}>{online ? 'Online' : 'Offline'}</Text>
+        <View style={[styles.pill, isOnline ? styles.on : styles.off]}>
+          <View style={[styles.dot, { backgroundColor: isOnline ? '#3DBFB8' : Colors.textLight }]} />
+          <Text style={styles.pillText}>{label}</Text>
         </View>
         {onLogout && (
           <TouchableOpacity style={styles.logout} onPress={onLogout} activeOpacity={0.8}>
@@ -68,8 +80,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12,
   },
-  brand:      { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  logo:       { width: 36, height: 36, borderRadius: 8, marginRight: 10 },
+  // Shared header-logo style (small, subtle lift) — same on every tab.
+  logo: {
+    width: 36, height: 36, borderRadius: 10, marginRight: 12,
+    shadowColor: '#2C6B7F', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25, shadowRadius: 4, elevation: 4,
+  },
+  brand:      { flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 12 },
   titleBlock: { flex: 1 },
   title:      { color: Colors.white, fontWeight: '900', fontSize: 22, letterSpacing: 0.5 },
   subtitle:   { color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 },

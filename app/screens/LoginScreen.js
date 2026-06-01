@@ -122,18 +122,17 @@ const styles = StyleSheet.create({
     height: 3, borderRadius: 99, opacity: 0.75,
   },
 
-  logoSection: { alignItems: 'center', marginBottom: 20, paddingHorizontal: 32 },
+  logoSection: { alignItems: 'center', marginBottom: 20, paddingHorizontal: 20 },
   logoGlow: {
-    borderRadius: 36, marginBottom: 12,
-    shadowColor: '#2C6B7F',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45, shadowRadius: 18, elevation: 8,
+    borderRadius: 20, marginBottom: 12,
+    shadowColor: '#fff', shadowOffset: { width: -5, height: -5 },
+    shadowOpacity: 0.7, shadowRadius: 14, elevation: 8,
   },
-  logo:    { width: 72, height: 72, borderRadius: 36 },
-  appName: { fontSize: 20, fontWeight: '900', color: Colors.dark, marginBottom: 4, letterSpacing: 0.5 },
-  appDesc: { fontSize: 11, color: Colors.textMid, textAlign: 'center', letterSpacing: 0.3 },
+  logo:    { width: 72, height: 72, borderRadius: 16 },
+  appName: { fontSize: 28, fontWeight: '900', color: Colors.dark, marginBottom: 4, letterSpacing: 1 },
+  appDesc: { fontSize: 12, color: Colors.textMid, textAlign: 'center', letterSpacing: 0.3 },
 
-  formGroup: { marginBottom: 14, paddingHorizontal: 32 },
+  formGroup: { marginBottom: 14, paddingHorizontal: 20 },
   label: { fontSize: 11, fontWeight: '800', color: Colors.textDark, letterSpacing: 0.8, marginBottom: 7 },
   input: {
     backgroundColor: Colors.inputBg, borderRadius: 12,
@@ -153,10 +152,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35, shadowRadius: 8,
   },
 
-  error: { color: Colors.statusStop, fontSize: 12, marginBottom: 8, paddingHorizontal: 32 },
+  error: { color: Colors.statusStop, fontSize: 12, marginBottom: 8, paddingHorizontal: 20 },
 
   btnWrap: {
-    marginHorizontal: 32, marginTop: 8, borderRadius: 14,
+    marginHorizontal: 20, marginTop: 8, borderRadius: 14,
     shadowColor: '#fff', shadowOffset: { width: -5, height: -5 },
     shadowOpacity: 0.55, shadowRadius: 12, elevation: 10,
   },
@@ -169,7 +168,7 @@ const styles = StyleSheet.create({
 
   noteCard: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginHorizontal: 32, marginTop: 20, padding: 12,
+    marginHorizontal: 20, marginTop: 20, padding: 12,
     backgroundColor: Colors.demoBg, borderRadius: 14,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.85)',
   },

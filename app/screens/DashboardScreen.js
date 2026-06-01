@@ -6,6 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
+import AppHeader from '../components/AppHeader';
 import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
@@ -474,23 +475,12 @@ export default function DashboardScreen({ onLogout }) {
   return (
     <BubbleBackground>
 
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <View style={Theme.row}>
-          <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.headerLogo} />
-          <Text style={styles.headerTitle}>BIO-FISH</Text>
-        </View>
-        <View style={Theme.row}>
-          <View style={[styles.onlinePill, online ? styles.onlineOn : styles.onlineOff]}>
-            <View style={[styles.onlineDot, { backgroundColor: online ? '#3DBFB8' : Colors.textLight }]} />
-            <Text style={styles.onlineText}>{online ? (demo ? 'Demo' : 'Online') : 'Offline'}</Text>
-          </View>
-          <TouchableOpacity style={styles.logoutBtn} onPress={onLogout} activeOpacity={0.8}>
-            <Ionicons name="log-out-outline" size={16} color={Colors.white} />
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <AppHeader
+        title="BIO-FISH"
+        onLogout={onLogout}
+        online={online}
+        statusLabel={demo ? 'Demo' : (online ? 'Online' : 'Offline')}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -637,28 +627,8 @@ export default function DashboardScreen({ onLogout }) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12,
-  },
-  headerLogo:  { width: 36, height: 36, borderRadius: 8, marginRight: 10 },
-  headerTitle: { color: Colors.white, fontWeight: '900', fontSize: 18, letterSpacing: 1 },
 
-  onlinePill: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, marginRight: 8,
-  },
-  onlineOn:   { backgroundColor: 'rgba(61,191,184,0.22)' },
-  onlineOff:  { backgroundColor: 'rgba(255,255,255,0.12)' },
-  onlineDot:  { width: 7, height: 7, borderRadius: 4 },
-  onlineText: { color: Colors.white, fontSize: 11, fontWeight: '700' },
 
-  logoutBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-  },
-  logoutText: { color: Colors.white, fontSize: 13, fontWeight: '600' },
 
   scroll: { padding: 16, paddingBottom: 120, gap: 14 },
 
