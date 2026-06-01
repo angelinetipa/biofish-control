@@ -476,7 +476,7 @@ export default function DashboardScreen({ onLogout }) {
     <BubbleBackground>
 
       <AppHeader
-        title="BIO-FISH"
+        title="Dashboard"
         onLogout={onLogout}
         online={online}
         statusLabel={demo ? 'Demo' : (online ? 'Online' : 'Offline')}
@@ -498,9 +498,9 @@ export default function DashboardScreen({ onLogout }) {
             <View style={{ flex: 1 }}>
               <View style={styles.statusLabelRow}>
                 <View style={[styles.statusDot, { backgroundColor: meta.color }]} />
-                <Text style={[styles.statusText, { color: meta.color }]}>{meta.label}</Text>
+                <Text style={[styles.statusText, { color: meta.color }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{meta.label}</Text>
               </View>
-              <Text style={styles.statusDesc}>{meta.desc}</Text>
+              {!showSubstep && <Text style={styles.statusDesc}>{meta.desc}</Text>}
             </View>
             <View style={styles.timerBadge}>
               <Ionicons name="timer-outline" size={12} color={Colors.textMid} />
@@ -614,6 +614,9 @@ export default function DashboardScreen({ onLogout }) {
               </TouchableOpacity>
             ))}
           </View>
+          {!isActive && !demo && (
+            <Text style={styles.hint}>Tap Start to begin a production cycle.</Text>
+          )}
           {machine.firmware_version ? (
             <Text style={styles.fwText}>Firmware {machine.firmware_version}</Text>
           ) : null}
@@ -736,5 +739,6 @@ const styles = StyleSheet.create({
   btn:        { paddingVertical: 14, alignItems: 'center', justifyContent: 'center', gap: 8 },
   btnText:    { color: Colors.white, fontWeight: '700', fontSize: 12 },
   dimBtn:     { opacity: 0.35 },
-  fwText:     { fontSize: 10, color: Colors.textLight, textAlign: 'center', marginTop: 12 },
+  hint:       { fontSize: 11, color: Colors.textLight, textAlign: 'center', marginTop: 10, fontStyle: 'italic' },
+  fwText:     { fontSize: 10, color: Colors.textLight, textAlign: 'center', marginTop: 4 },
 });
