@@ -51,7 +51,7 @@ export default function AppHeader({
           <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.logo} />
           <View style={styles.textBlock}>
             <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+            {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
           </View>
         </View>
 

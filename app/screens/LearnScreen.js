@@ -50,7 +50,7 @@ export default function LearnScreen({ onLogout }) {
   return (
     <BubbleBackground>
       <AppHeader title="Learn"
-      subtitle="About BIO-FISH & the science" onLogout={onLogout} channelKey="online-learn" />
+      subtitle="About BIO-FISH" onLogout={onLogout} channelKey="online-learn" />
 
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
 

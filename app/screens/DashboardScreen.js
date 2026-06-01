@@ -512,7 +512,7 @@ export default function DashboardScreen({ onLogout }) {
 
       <AppHeader
         title="Dashboard"
-        subtitle="Monitor & control the machine"
+        subtitle="Monitor & control"
         onLogout={confirmLogout}
         online={online}
         statusLabel={demo ? 'Demo' : (online ? 'Online' : 'Offline')}
