@@ -15,7 +15,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/BIOFISH_LOGO.png",
-        "backgroundColor": "#0a2a3a"
+        "backgroundColor": "#2C6B7F"
       }
     },
     "web": { "favicon": "./assets/BIOFISH_LOGO.png" }

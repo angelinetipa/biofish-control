@@ -6,12 +6,9 @@ import AppHeader from '../components/AppHeader';
 import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
 
-// Photos are optional — drop these into assets/ when ready.
-// Missing files won't crash the app; a placeholder shows instead.
-let MACHINE_IMG = null;
-let SHEET_IMG = null;
-try { MACHINE_IMG = require('../../assets/BIOFISH_MACHINE.png'); } catch (e) {}
-try { SHEET_IMG   = require('../../assets/BIOFISH_SHEET.png');   } catch (e) {}
+// Photos — files must exist in assets/ with these exact names.
+const MACHINE_IMG = require('../../assets/BIOFISH_MACHINE.jpg');
+const SHEET_IMG   = require('../../assets/BIOFISH_SHEET.jpg');
 
 const STAGES = [
   {
@@ -99,6 +96,34 @@ export default function LearnScreen({ onLogout }) {
           </Text>
         </View>
 
+        {/* Uses of bioplastic film */}
+        <View style={Theme.card}>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="cube-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>What It Can Be Used For</Text>
+          </View>
+          <Text style={styles.bodyText}>
+            The bioplastic film produced by BIO-FISH is a thin, flexible sheet that can serve
+            as a sustainable substitute for conventional single-use plastic in several everyday applications.
+          </Text>
+          {[
+            { icon: 'bag-outline',       title: 'Food Packaging',      desc: 'Can be formed into wrappers, flat sachets, or small bags for dry goods — tested to hold contents without tearing or deforming.' },
+            { icon: 'leaf-outline',      title: 'Compostable Film',    desc: 'Degrades 71–84% in 3 weeks when buried in soil, and completely disintegrates within 2 days under conditions studied in recent research.' },
+            { icon: 'shield-checkmark-outline', title: 'Antibacterial Layer', desc: 'The formulation includes guava leaf extract as a natural antibacterial additive, making it suitable for protective wrapping of food items.' },
+            { icon: 'refresh-outline',   title: 'Waste Valorization',  desc: 'Made entirely from fish scale waste — a byproduct discarded daily at public markets — turning a sanitation problem into a reusable resource.' },
+          ].map((item, i) => (
+            <View key={i} style={styles.useRow}>
+              <View style={styles.useIcon}>
+                <Ionicons name={item.icon} size={18} color={Colors.blue} />
+              </View>
+              <View style={styles.useBody}>
+                <Text style={styles.useTitle}>{item.title}</Text>
+                <Text style={styles.useDesc}>{item.desc}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
         {/* Why it matters */}
         <View style={Theme.card}>
           <View style={Theme.cardLabelRow}>
@@ -158,4 +183,9 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, backgroundColor: Colors.inputBg, borderRadius: 14, padding: 14, alignItems: 'center' },
   statNum: { fontSize: 22, fontWeight: '900', color: Colors.blue },
   statLabel: { fontSize: 10, color: Colors.textMid, fontWeight: '600', textAlign: 'center', marginTop: 4, lineHeight: 14 },
+  useRow:   { flexDirection: 'row', gap: 14, marginBottom: 14, alignItems: 'flex-start' },
+  useIcon:  { width: 38, height: 38, borderRadius: 12, backgroundColor: Colors.inputBg, alignItems: 'center', justifyContent: 'center' },
+  useBody:  { flex: 1 },
+  useTitle: { fontSize: 13, fontWeight: '700', color: Colors.dark, marginBottom: 2 },
+  useDesc:  { fontSize: 12, color: Colors.textMid, lineHeight: 18 },
 });

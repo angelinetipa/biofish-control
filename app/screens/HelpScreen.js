@@ -40,6 +40,15 @@ const FAQS = [
   },
 ];
 
+const CONNECT_STEPS = [
+  { step: '1', title: 'Power on the ESP32',          desc: 'Connect the BIO-FISH machine to power. Wait 10–20 seconds for it to boot.' },
+  { step: '2', title: 'Find the BIOFISH-Setup hotspot', desc: 'On your phone, open WiFi settings. Look for a network named BIOFISH-Setup and connect to it.' },
+  { step: '3', title: 'Open the setup page',         desc: "A browser page should open automatically. If it doesn't, open your browser and go to 192.168.4.1" },
+  { step: '4', title: 'Enter your WiFi details',     desc: 'Type your WiFi name and password, then tap Save. The machine connects and the hotspot disappears.' },
+  { step: '5', title: 'Open BIO-FISH app',           desc: 'Launch the app and log in. The Online pill turns teal when the machine is connected.' },
+  { step: '6', title: 'Moving to a new location?',   desc: 'Reset the ESP32. It creates the BIOFISH-Setup hotspot again so you can enter new WiFi credentials.' },
+];
+
 const TROUBLESHOOT = [
   { problem: 'Machine not responding',   solution: 'Check WiFi connection. Make sure the ESP32 is powered and connected.' },
   { problem: 'Temperature not rising',   solution: 'Check heater relay. Ensure max temp in Settings is above room temperature.' },
@@ -101,6 +110,35 @@ export default function HelpScreen({ onLogout }) {
           ))}
         </View>
 
+        {/* Connecting the Machine */}
+        <View style={Theme.card}>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="wifi-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>Connecting the Machine</Text>
+          </View>
+          <Text style={styles.stepDesc}>
+            The machine uses a WiFi setup hotspot on first boot. Follow these steps to connect it to your network and get the app talking to it.
+          </Text>
+          <View style={{ height: 12 }} />
+          {CONNECT_STEPS.map((item, i) => (
+            <View key={item.step} style={[styles.stepRow, i === CONNECT_STEPS.length - 1 && { marginBottom: 0 }]}>
+              <View style={styles.stepCircle}>
+                <Text style={styles.stepNum}>{item.step}</Text>
+              </View>
+              <View style={styles.stepContent}>
+                <Text style={styles.stepTitle}>{item.title}</Text>
+                <Text style={styles.stepDesc}>{item.desc}</Text>
+              </View>
+            </View>
+          ))}
+          <View style={styles.tipBox}>
+            <Ionicons name="information-circle-outline" size={14} color={Colors.blue} />
+            <Text style={styles.tipText}>
+              If the setup page doesn't appear, make sure you're connected to BIOFISH-Setup (not your regular WiFi) and try 192.168.4.1 manually.
+            </Text>
+          </View>
+        </View>
+
         {/* Troubleshooting */}
         <View style={Theme.card}>
           <View style={Theme.cardLabelRow}>
@@ -151,4 +189,10 @@ const styles = StyleSheet.create({
   troubleHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   troubleProblem: { fontSize: 13, fontWeight: '700', color: Colors.dark },
   troubleSolution:{ fontSize: 12, color: Colors.textMid, lineHeight: 18 },
+  tipBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    backgroundColor: Colors.inputBg, borderRadius: 12,
+    padding: 12, marginTop: 16,
+  },
+  tipText: { flex: 1, fontSize: 12, color: Colors.textMid, lineHeight: 18 },
 });
