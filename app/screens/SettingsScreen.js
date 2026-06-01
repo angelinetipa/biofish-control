@@ -99,7 +99,8 @@ export default function SettingsScreen({ onLogout }) {
 
   return (
     <BubbleBackground>
-      <AppHeader title="Settings" onLogout={onLogout} channelKey="online-settings" />
+      <AppHeader title="Settings"
+      subtitle="Machine parameters & team" onLogout={onLogout} channelKey="online-settings" />
 
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
 

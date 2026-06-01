@@ -49,7 +49,8 @@ function Photo({ source, caption, icon, height = 220 }) {
 export default function LearnScreen({ onLogout }) {
   return (
     <BubbleBackground>
-      <AppHeader title="Learn" onLogout={onLogout} channelKey="online-learn" />
+      <AppHeader title="Learn"
+      subtitle="About BIO-FISH & the science" onLogout={onLogout} channelKey="online-learn" />
 
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
 
@@ -130,6 +131,58 @@ export default function LearnScreen({ onLogout }) {
               </View>
             </View>
           ))}
+        </View>
+
+        {/* DOST-ITDI Test Results */}
+        <View style={Theme.card}>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="flask-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>Official Test Results</Text>
+          </View>
+          <Text style={styles.bodyText}>
+            BIO-FISH bioplastic films were submitted to the DOST Industrial Technology Development
+            Institute (ITDI), Standards and Testing Division, and tested under official ASTM methods
+            in May 2026 (TSR No. ITDI-042026-PPT-0249).
+          </Text>
+
+          <View style={styles.statRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statNum}>15.6</Text>
+              <Text style={styles.statLabel}>{`MPa
+Tensile Strength`}</Text>
+              <Text style={styles.statCite}>ASTM D882</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statNum}>30.1%</Text>
+              <Text style={styles.statLabel}>{`Elongation
+at Break`}</Text>
+              <Text style={styles.statCite}>ASTM D882</Text>
+            </View>
+          </View>
+
+          <View style={styles.statRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statNum}>~220</Text>
+              <Text style={styles.statLabel}>{`MPa
+Secant Modulus`}</Text>
+              <Text style={styles.statCite}>ASTM D882</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statNum}>406.7%</Text>
+              <Text style={styles.statLabel}>{`Water Absorption
+(24h immersion)`}</Text>
+              <Text style={styles.statCite}>ASTM D570</Text>
+            </View>
+          </View>
+
+          <Text style={styles.bodyText}>
+            The films were described as thin, smooth, flexible, and translucent — light blue to
+            transparent in color. Swelling and discoloration were observed after the 24-hour
+            water immersion test, consistent with the hydrophilic nature of gelatin-based films.
+          </Text>
+          <Text style={styles.cite}>
+            (DOST-ITDI Standards and Testing Division, Taguig City, May 13, 2026)
+          </Text>
         </View>
 
         {/* Why it matters */}

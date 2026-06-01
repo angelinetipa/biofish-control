@@ -76,7 +76,8 @@ function AccordionItem({ question, answer }) {
 export default function HelpScreen({ onLogout }) {
   return (
     <BubbleBackground>
-      <AppHeader title="Help" onLogout={onLogout} channelKey="online-help" />
+      <AppHeader title="Help"
+      subtitle="How to use & troubleshoot" onLogout={onLogout} channelKey="online-help" />
 
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
 

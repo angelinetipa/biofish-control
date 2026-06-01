@@ -168,9 +168,9 @@ const styles = StyleSheet.create({
 
   noteCard: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginHorizontal: 20, marginTop: 20, padding: 12,
+    marginHorizontal: 20, marginTop: 14, padding: 10,
     backgroundColor: Colors.demoBg, borderRadius: 14,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.85)',
   },
-  noteText: { flex: 1, fontSize: 11, color: Colors.textMid, lineHeight: 16 },
+  noteText: { flex: 1, fontSize: 10, color: Colors.textLight, lineHeight: 14 },
 });
