@@ -149,7 +149,12 @@ function DecisionCard({ machine, send, loading }) {
 
   if (status === 'OVERRUN') {
     return (
-      <View style={[styles.decisionCard, { borderColor: '#D9534F' }]}>
+      <View style={styles.decisionCard}>
+        <View style={[styles.decisionBanner, { backgroundColor: '#D9534F' }]}>
+          <Ionicons name="warning" size={14} color={Colors.white} />
+          <Text style={styles.decisionBannerText}>ACTION REQUIRED — Temperature Overrun</Text>
+        </View>
+        <View style={[styles.decisionInner, { borderColor: '#D9534F' }]}>
         <View style={styles.decisionHead}>
           <Ionicons name="warning" size={18} color="#D9534F" />
           <Text style={[styles.decisionTitle, { color: '#D9534F' }]}>Temperature Overrun</Text>
@@ -167,6 +172,7 @@ function DecisionCard({ machine, send, loading }) {
           <ActionButton label="Stop" icon="stop-circle-outline" color="#B83230"
             onPress={() => send('estop')} disabled={loading} />
         </View>
+        </View>
       </View>
     );
   }
@@ -176,11 +182,12 @@ function DecisionCard({ machine, send, loading }) {
     const vol  = machine.guardian_volume_ml;
     const inRange = vol != null && vol >= GUARDIAN_OK_MIN && vol <= GUARDIAN_OK_MAX;
     return (
-      <View style={[styles.decisionCard, { borderColor: '#F0A030' }]}>
-        <View style={styles.decisionHead}>
-          <Ionicons name="flask-outline" size={18} color="#F0A030" />
-          <Text style={[styles.decisionTitle, { color: '#F0A030' }]}>Volume Check</Text>
+      <View style={styles.decisionCard}>
+        <View style={[styles.decisionBanner, { backgroundColor: '#F0A030' }]}>
+          <Ionicons name="flask-outline" size={14} color={Colors.white} />
+          <Text style={styles.decisionBannerText}>ACTION REQUIRED — Volume Check</Text>
         </View>
+        <View style={[styles.decisionInner, { borderColor: '#F0A030' }]}>
         <View style={styles.volRow}>
           <View>
             <Text style={styles.volBig}>{vol != null ? `${Math.round(vol)} mL` : '— mL'}</Text>
@@ -225,6 +232,7 @@ function DecisionCard({ machine, send, loading }) {
             </View>
           </>
         )}
+        </View>
       </View>
     );
   }
@@ -232,11 +240,12 @@ function DecisionCard({ machine, send, loading }) {
   if (status === 'TRAY_WAIT') {
     const phase = machine.tray_phase || 'waiting';
     return (
-      <View style={[styles.decisionCard, { borderColor: '#4A7FD4' }]}>
-        <View style={styles.decisionHead}>
-          <Ionicons name="grid-outline" size={18} color="#4A7FD4" />
-          <Text style={[styles.decisionTitle, { color: '#4A7FD4' }]}>Film Formation — Trays</Text>
+      <View style={styles.decisionCard}>
+        <View style={[styles.decisionBanner, { backgroundColor: '#4A7FD4' }]}>
+          <Ionicons name="grid-outline" size={14} color={Colors.white} />
+          <Text style={styles.decisionBannerText}>ACTION REQUIRED — Film Formation Trays</Text>
         </View>
+        <View style={[styles.decisionInner, { borderColor: '#4A7FD4' }]}>
         <View style={styles.trayRow}>
           <View style={styles.trayStat}>
             <Text style={styles.trayStatNum}>{machine.tray_count ?? 0}</Text>
@@ -271,6 +280,7 @@ function DecisionCard({ machine, send, loading }) {
               onPress={() => send('tray_end')} disabled={loading} />
           </View>
         )}
+        </View>
       </View>
     );
   }
@@ -331,14 +341,26 @@ export default function DashboardScreen({ onLogout }) {
   }, [fetchStatus]);
 
   // ── Demo engine ──
-  const demoSnap = (over) => ({
-    ...DEFAULT_STATE,
-    c1_temp: 30, c3_temp: 30,
-    firmware_version: 'DEMO',
-    last_seen: new Date().toISOString(),
-    process_log: ['Demo mode active'],
-    ...over,
-  });
+  const demoSnap = (over) => {
+    const state = { ...DEFAULT_STATE, c1_temp: 30, c3_temp: 30,
+      firmware_version: 'DEMO', last_seen: new Date().toISOString(), ...over };
+    // Build a realistic process log from current state
+    const log = [];
+    if (state.status === 'COMPLETE')   log.push('Cycle complete — bioplastic film ready.');
+    if (state.status === 'ESTOP')      log.push('Emergency stop triggered.');
+    if (state.status === 'CLEANING')   log.push(state.substep || 'Cleaning cycle running…');
+    if (state.status === 'OVERRUN')    log.push('⚠ Temp cutoff at 75°C — heater off. Awaiting operator.');
+    if (state.status === 'GUARDIAN_WAIT') log.push('Volume check: ' + (state.guardian_volume_ml ? Math.round(state.guardian_volume_ml) + ' mL measured.' : 'Measuring…'));
+    if (state.status === 'TRAY_WAIT')  log.push('Stage 4: dispensing into trays. Tray #' + ((state.tray_count || 0) + 1));
+    if (state.status === 'RUNNING' && state.substep) log.push(state.substep);
+    if (state.status === 'PAUSED')     log.push('Process paused by operator.');
+    if (state.status === 'IDLE')       log.push('Machine idle. Tap Start to begin.');
+    if (state.stage_index >= 3) log.push('Stage 3 complete — formulation done.');
+    if (state.stage_index >= 2) log.push('Stage 2 complete — filtration done.');
+    if (state.stage_index >= 1) log.push('Stage 1 complete — extraction done.');
+    log.push('[Demo Mode]');
+    return { ...state, process_log: log };
+  };
 
   const demoTick = useCallback(() => {
     const dm = dmRef.current;
@@ -660,10 +682,16 @@ const styles = StyleSheet.create({
   demoHint: { fontSize: 11, color: Colors.textMid, lineHeight: 16, marginTop: 8, marginBottom: 2 },
 
   decisionCard: {
-    backgroundColor: Colors.white, borderRadius: 18, padding: 16,
-    borderLeftWidth: 5, elevation: 6,
-    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
+    borderRadius: 14, overflow: 'hidden',
+    elevation: 6, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
   },
+  decisionInner: {
+    backgroundColor: Colors.white, padding: 16, borderLeftWidth: 5,
+  },
+  decisionBanner: {
+    paddingHorizontal: 16, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 8,
+  },
+  decisionBannerText: { color: Colors.white, fontWeight: '800', fontSize: 12, letterSpacing: 0.4, flex: 1 },
   decisionHead:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   decisionTitle: { fontSize: 16, fontWeight: '900', letterSpacing: 0.3 },
   decisionBody:  { fontSize: 12, color: Colors.textMid, lineHeight: 18, marginBottom: 12 },

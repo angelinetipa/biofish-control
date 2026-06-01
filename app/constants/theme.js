@@ -41,7 +41,7 @@ export const Theme = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 80,
+    paddingBottom: 20,
     gap: 16,
   },
   cardLabelRow: {
