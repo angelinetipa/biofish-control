@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView,
+  Alert, View, Text, StyleSheet, ScrollView,
   TouchableOpacity, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -94,7 +94,11 @@ export default function SettingsScreen({ onLogout }) {
     payload.updated_at = new Date().toISOString();
     const { error } = await supabase.from('machine_settings').update(payload).eq('id', 1);
     setSaving(false);
-    if (!error) setDirty(false);
+    if (!error) {
+      setDirty(false);
+    } else {
+      Alert.alert('Save Failed', 'Could not save settings. Check your connection and try again.');
+    }
   };
 
   return (
