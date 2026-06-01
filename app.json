@@ -2,13 +2,14 @@
   "expo": {
     "name": "BIO-FISH",
     "slug": "biofish",
-    "version": "1.0.0",
+    "version": "2.6.0",
     "orientation": "portrait",
     "icon": "./assets/BIOFISH_LOGO.png",
+    "scheme": "biofish",
     "splash": {
       "image": "./assets/BIOFISH_LOGO.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0a2a3a"
+      "backgroundColor": "#2C6B7F"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": { "supportsTablet": true },
@@ -16,8 +17,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/BIOFISH_LOGO.png",
         "backgroundColor": "#2C6B7F"
-      }
+      },
+      "usesCleartextTraffic": false
     },
-    "web": { "favicon": "./assets/BIOFISH_LOGO.png" }
+    "web": {
+      "favicon": "./assets/BIOFISH_LOGO.png",
+      "bundler": "metro"
+    }
   }
 }
