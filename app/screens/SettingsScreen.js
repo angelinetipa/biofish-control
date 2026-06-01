@@ -157,7 +157,7 @@ export default function SettingsScreen({ onLogout }) {
           </View>
 
           <View style={styles.logoRow}>
-            <Image source={require('../../assets/BIOFISH_LOGO_2026.png')} style={styles.aboutLogo} />
+            <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.aboutLogo} />
             <View>
               <Text style={styles.aboutTitle}>BIO-FISH</Text>
               <Text style={styles.aboutSubtitle}>Bioplastic Sheet Production{'\n'}from Fish Scales</Text>

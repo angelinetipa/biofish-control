@@ -40,7 +40,7 @@ export default function AppHeader({ title = 'BIO-FISH', subtitle, onLogout, chan
   return (
     <View style={styles.wrap}>
       <View style={styles.brand}>
-        <Image source={require('../../assets/BIOFISH_LOGO_2026.png')} style={styles.logo} />
+        <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.logo} />
         <View style={styles.titleBlock}>
           <Text style={styles.title}>{title}</Text>
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}

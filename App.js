@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import LoginScreen from './app/screens/LoginScreen';
 import DashboardScreen from './app/screens/DashboardScreen';
+import LearnScreen from './app/screens/LearnScreen';
 import HelpScreen from './app/screens/HelpScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
 
@@ -33,6 +34,7 @@ export default function App() {
           tabBarIcon: ({ focused, color, size }) => {
             const icons = {
               Dashboard: focused ? 'radio-button-on' : 'radio-button-off',
+              Learn:     focused ? 'book' : 'book-outline',
               Help:      focused ? 'help-circle' : 'help-circle-outline',
               Settings:  focused ? 'settings' : 'settings-outline',
             };
@@ -42,6 +44,9 @@ export default function App() {
       >
         <Tab.Screen name="Dashboard">
           {() => <DashboardScreen user={user} onLogout={logout} />}
+        </Tab.Screen>
+        <Tab.Screen name="Learn">
+          {() => <LearnScreen onLogout={logout} />}
         </Tab.Screen>
         <Tab.Screen name="Help">
           {() => <HelpScreen onLogout={logout} />}

@@ -477,7 +477,7 @@ export default function DashboardScreen({ onLogout }) {
       {/* ── Header ── */}
       <View style={styles.header}>
         <View style={Theme.row}>
-          <Image source={require('../../assets/BIOFISH_LOGO_2026.png')} style={styles.headerLogo} />
+          <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.headerLogo} />
           <Text style={styles.headerTitle}>BIO-FISH</Text>
         </View>
         <View style={Theme.row}>
