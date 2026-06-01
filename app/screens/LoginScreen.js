@@ -1,32 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Image, KeyboardAvoidingView, Platform, ScrollView,
+  Image, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
 import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
+import { supabase } from '../lib/supabase';
 
-// Single shared access PIN. Set EXPO_PUBLIC_ACCESS_PIN in your env (.env / Vercel).
-// Falls back to '2026' if the env var is missing.
-const ACCESS_PIN = process.env.EXPO_PUBLIC_ACCESS_PIN || '2026';
+const FALLBACK_PIN = process.env.EXPO_PUBLIC_ACCESS_PIN || '2026';
 
 export default function LoginScreen({ onLogin }) {
-  const [pin, setPin]           = useState('');
-  const [focused, setFocused]   = useState(false);
-  const [showPin, setShowPin]   = useState(false);
-  const [error, setError]       = useState('');
+  const [pin, setPin]         = useState('');
+  const [focused, setFocused] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+  const [error, setError]     = useState('');
+  const [accessPin, setAccessPin] = useState(null); // null = still loading
+
+  // Fetch PIN from Supabase on mount; fall back to env var if unavailable
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('machine_settings').select('access_pin').eq('id', 1).single();
+        if (active) setAccessPin(data?.access_pin || FALLBACK_PIN);
+      } catch {
+        if (active) setAccessPin(FALLBACK_PIN);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const handleUnlock = () => {
-    if (pin === ACCESS_PIN) {
+    if (!accessPin) return;
+    if (pin === accessPin) {
       onLogin({ ok: true });
     } else {
       setError('Incorrect PIN. Try again.');
       setPin('');
     }
   };
+
+  const loading = accessPin === null;
 
   return (
     <BubbleBackground>
@@ -56,7 +74,7 @@ export default function LoginScreen({ onLogin }) {
               <View style={styles.passWrap}>
                 <TextInput
                   style={[styles.input, styles.inputPass, focused && styles.inputFocused]}
-                  placeholder="Enter access PIN"
+                  placeholder={loading ? 'Loading…' : 'Enter access PIN'}
                   placeholderTextColor={Colors.textLight}
                   value={pin}
                   onChangeText={t => { setPin(t); setError(''); }}
@@ -67,35 +85,38 @@ export default function LoginScreen({ onLogin }) {
                   returnKeyType="go"
                   onSubmitEditing={handleUnlock}
                   maxLength={12}
+                  editable={!loading}
                 />
-                <TouchableOpacity
-                  onPress={() => setShowPin(v => !v)}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  style={styles.eyeBtn}
-                >
-                  <Ionicons name={showPin ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textMid} />
-                </TouchableOpacity>
+                {loading
+                  ? <ActivityIndicator size="small" color={Colors.textMid} style={styles.eyeBtn} />
+                  : (
+                    <TouchableOpacity
+                      onPress={() => setShowPin(v => !v)}
+                      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                      style={styles.eyeBtn}
+                    >
+                      <Ionicons name={showPin ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textMid} />
+                    </TouchableOpacity>
+                  )
+                }
               </View>
             </View>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
             {/* Unlock */}
-            <TouchableOpacity onPress={handleUnlock} activeOpacity={0.85} style={styles.btnWrap}>
+            <TouchableOpacity onPress={handleUnlock} activeOpacity={0.85} style={styles.btnWrap} disabled={loading}>
               <LinearGradient
                 colors={[Colors.teal, Colors.blue]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={styles.btn}
+                style={[styles.btn, loading && { opacity: 0.5 }]}
               >
                 <Ionicons name="lock-open-outline" size={16} color={Colors.white} />
                 <Text style={styles.btnText}>UNLOCK</Text>
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Note */}
-            <Text style={styles.noteInline}>
-              PIN required to access machine controls.
-            </Text>
+            <Text style={styles.noteInline}>PIN required to access machine controls.</Text>
 
           </View>
         </ScrollView>
@@ -121,10 +142,9 @@ const styles = StyleSheet.create({
 
   logoSection: { alignItems: 'center', marginBottom: 20, paddingHorizontal: 20 },
   logoGlow: {
-    borderRadius: 48, marginBottom: 14,
-    shadowColor: '#2C6B7F', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5, shadowRadius: 20,
-    elevation: 16, backgroundColor: 'transparent',
+    borderRadius: 20, marginBottom: 12,
+    shadowColor: '#fff', shadowOffset: { width: -5, height: -5 },
+    shadowOpacity: 0.7, shadowRadius: 14, elevation: 8,
   },
   logo:    { width: 72, height: 72, borderRadius: 16 },
   appName: { fontSize: 28, fontWeight: '900', color: Colors.dark, marginBottom: 4, letterSpacing: 1 },
@@ -138,8 +158,8 @@ const styles = StyleSheet.create({
     fontSize: 13, color: Colors.textDark,
     borderWidth: 2, borderColor: 'transparent',
   },
-  passWrap: { position: 'relative', justifyContent: 'center' },
-  inputPass: { paddingRight: 44, letterSpacing: 3 },
+  passWrap:     { position: 'relative', justifyContent: 'center' },
+  inputPass:    { paddingRight: 44, letterSpacing: 3 },
   eyeBtn: {
     position: 'absolute', right: 8, top: 0, bottom: 0,
     justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6,

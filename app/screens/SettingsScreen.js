@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Alert, View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Image,
+  TouchableOpacity, Image, TextInput, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
@@ -10,7 +10,7 @@ import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
 
-// ─── Machine parameters (match ESP32 firmware v2.6 exactly) ────────────────────
+// ─── Machine parameters (match ESP32 firmware v2.6 exactly) ───────────────────
 const PARAMS = [
   { key: 'water_in_l',   label: 'Water In',    min: 0.5,  max: 10.0,  step: 0.05, unit: 'L',   def: 2.5   },
   { key: 'c1_mix_min',   label: 'C1 Mix Time', min: 1.0,  max: 240.0, step: 1.0,  unit: 'min', def: 240.0 },
@@ -35,10 +35,20 @@ const fmt = (p, v) => (p.step < 1 ? Number(v).toFixed(2) : Number(v).toFixed(0))
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function SettingsScreen({ onLogout }) {
-  const [values, setValues] = useState(defaultValues);
-  const [dirty, setDirty]   = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [values, setValues]   = useState(defaultValues);
+  const [dirty, setDirty]     = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [loaded, setLoaded]   = useState(false);
+
+  // PIN change state
+  const [currentPin, setCurrentPin]   = useState('');
+  const [newPin, setNewPin]           = useState('');
+  const [confirmPin, setConfirmPin]   = useState('');
+  const [pinSaving, setPinSaving]     = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew]         = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [livePin, setLivePin]         = useState('');  // current PIN from DB
 
   const dirtyRef = useRef(false);
   useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
@@ -49,6 +59,7 @@ export default function SettingsScreen({ onLogout }) {
       PARAMS.forEach((p) => { if (row[p.key] != null) next[p.key] = Number(row[p.key]); });
       return next;
     });
+    if (row.access_pin) setLivePin(row.access_pin);
   };
 
   useEffect(() => {
@@ -101,10 +112,38 @@ export default function SettingsScreen({ onLogout }) {
     }
   };
 
+  const savePin = async () => {
+    if (!currentPin || !newPin || !confirmPin) {
+      Alert.alert('Missing Fields', 'Please fill in all PIN fields.'); return;
+    }
+    if (currentPin !== livePin) {
+      Alert.alert('Wrong PIN', 'Current PIN is incorrect.'); return;
+    }
+    if (newPin.length < 4) {
+      Alert.alert('Too Short', 'New PIN must be at least 4 digits.'); return;
+    }
+    if (newPin !== confirmPin) {
+      Alert.alert('Mismatch', 'New PIN and confirmation do not match.'); return;
+    }
+    setPinSaving(true);
+    const { error } = await supabase
+      .from('machine_settings')
+      .update({ access_pin: newPin, updated_by: 'app', updated_at: new Date().toISOString() })
+      .eq('id', 1);
+    setPinSaving(false);
+    if (!error) {
+      setLivePin(newPin);
+      setCurrentPin(''); setNewPin(''); setConfirmPin('');
+      Alert.alert('PIN Updated', 'Access PIN has been changed successfully.');
+    } else {
+      Alert.alert('Save Failed', 'Could not update PIN. Check your connection and try again.');
+    }
+  };
+
   return (
     <BubbleBackground>
       <AppHeader title="Settings"
-      subtitle="Parameters & team" onLogout={onLogout} channelKey="online-settings" />
+        subtitle="Parameters & team" onLogout={onLogout} channelKey="online-settings" />
 
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
 
@@ -154,6 +193,52 @@ export default function SettingsScreen({ onLogout }) {
           </TouchableOpacity>
         </View>
 
+        {/* Change PIN */}
+        <View style={Theme.card}>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="key-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>Change Access PIN</Text>
+          </View>
+
+          <Text style={styles.pinHint}>Changes take effect for all users on next login.</Text>
+
+          {[
+            { label: 'Current PIN', value: currentPin, setter: setCurrentPin, show: showCurrent, toggle: () => setShowCurrent(v => !v) },
+            { label: 'New PIN',     value: newPin,     setter: setNewPin,     show: showNew,     toggle: () => setShowNew(v => !v) },
+            { label: 'Confirm PIN', value: confirmPin, setter: setConfirmPin, show: showConfirm, toggle: () => setShowConfirm(v => !v) },
+          ].map(({ label, value, setter, show, toggle }) => (
+            <View key={label} style={styles.pinGroup}>
+              <Text style={styles.pinLabel}>{label}</Text>
+              <View style={styles.pinWrap}>
+                <TextInput
+                  style={styles.pinInput}
+                  value={value}
+                  onChangeText={setter}
+                  secureTextEntry={!show}
+                  keyboardType="number-pad"
+                  maxLength={12}
+                  placeholderTextColor={Colors.textLight}
+                  placeholder="••••"
+                />
+                <TouchableOpacity onPress={toggle} style={styles.pinEye}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name={show ? 'eye-off-outline' : 'eye-outline'} size={17} color={Colors.textMid} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+
+          <TouchableOpacity
+            style={[styles.saveBtn, pinSaving && styles.saveBtnOff]}
+            onPress={savePin}
+            disabled={pinSaving}
+            activeOpacity={0.85}
+          >
+            <Ionicons name={pinSaving ? 'sync' : 'shield-checkmark-outline'} size={16} color={Colors.white} />
+            <Text style={styles.saveText}>{pinSaving ? 'Saving…' : 'Update PIN'}</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* About Us */}
         <View style={Theme.card}>
           <View style={Theme.cardLabelRow}>
@@ -192,10 +277,6 @@ export default function SettingsScreen({ onLogout }) {
           <Text style={styles.schoolText}>Polytechnic University of the Philippines</Text>
           <Text style={styles.schoolText}>Sta. Mesa, Manila</Text>
           <Text style={styles.schoolText}>CMPE 407 — Academic Year 2025–2026</Text>
-
-          <View style={styles.versionBadge}>
-            <Text style={styles.versionText}>BIO-FISH v2.6  •  ESP32 Firmware v18</Text>
-          </View>
         </View>
 
       </ScrollView>
@@ -241,6 +322,24 @@ const styles = StyleSheet.create({
   saveBtnOff: { opacity: 0.4 },
   saveText:   { color: Colors.white, fontWeight: '800', fontSize: 13, letterSpacing: 0.3 },
 
+  // PIN
+  pinHint:  { fontSize: 12, color: Colors.textMid, marginBottom: 14, lineHeight: 18 },
+  pinGroup: { marginBottom: 12 },
+  pinLabel: { fontSize: 11, fontWeight: '800', color: Colors.textDark, letterSpacing: 0.8, marginBottom: 6 },
+  pinWrap:  { position: 'relative', justifyContent: 'center' },
+  pinInput: {
+    backgroundColor: Colors.inputBg, borderRadius: 12,
+    paddingHorizontal: 14, paddingRight: 44,
+    paddingVertical: Platform.OS === 'ios' ? 13 : 10,
+    fontSize: 13, color: Colors.textDark, letterSpacing: 3,
+    borderWidth: 2, borderColor: 'transparent',
+  },
+  pinEye: {
+    position: 'absolute', right: 10, top: 0, bottom: 0,
+    justifyContent: 'center', alignItems: 'center',
+  },
+
+  // About
   logoRow:       { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },
   aboutLogo:     { width: 56, height: 56, borderRadius: 12 },
   aboutTitle:    { fontSize: 18, fontWeight: '900', color: Colors.dark },
@@ -260,10 +359,4 @@ const styles = StyleSheet.create({
   memberRole: { fontSize: 11, color: Colors.textMid },
 
   schoolText: { fontSize: 13, color: Colors.textDark, marginBottom: 4 },
-
-  versionBadge: {
-    marginTop: 16, backgroundColor: Colors.inputBg,
-    borderRadius: 10, padding: 10, alignItems: 'center',
-  },
-  versionText: { fontSize: 11, color: Colors.statusRunning, fontWeight: '600' },
 });
