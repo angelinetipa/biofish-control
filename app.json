@@ -11,18 +11,13 @@
       "resizeMode": "contain",
       "backgroundColor": "#2C6B7F"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true
-    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": true },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/BIOFISH_LOGO.png",
+        "foregroundImage": "./assets/BIOFISH_LOGO_SQUARE.png",
         "backgroundColor": "#2C6B7F"
       },
-      "usesCleartextTraffic": false,
       "package": "com.angelinetipa.biofish"
     },
     "web": {
