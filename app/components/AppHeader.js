@@ -48,7 +48,9 @@ export default function AppHeader({
 
         {/* Logo spans title + subtitle */}
         <View style={styles.brand}>
-          <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.logo} />
+          <View style={styles.logoGlow}>
+            <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.logo} />
+          </View>
           <View style={styles.textBlock}>
             <Text style={styles.title}>{title}</Text>
             {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
@@ -81,7 +83,16 @@ const styles = StyleSheet.create({
   // Row 1
   row:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand:     { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 8 },
-  logo:      { width: 42, height: 42, borderRadius: 10 },
+  logoGlow: {
+    borderRadius: 10,
+    shadowColor: '#fff', shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1, shadowRadius: 20,
+    elevation: 20, backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  logo: { width: 42, height: 42, borderRadius: 10,
+    shadowColor: '#fff', shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1, shadowRadius: 20, elevation: 20,
+  },
   textBlock: { flex: 1 },
   title:     { color: Colors.white, fontWeight: '900', fontSize: 22, letterSpacing: 0.5 },
   subtitle:  { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 1 },
