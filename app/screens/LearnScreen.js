@@ -8,7 +8,8 @@ import { Theme } from '../constants/theme';
 
 // Photos — files must exist in assets/ with these exact names.
 const MACHINE_IMG = require('../../assets/BIOFISH_MACHINE.jpg');
-const SHEET_IMG   = require('../../assets/BIOFISH_SHEET.jpg');
+const SHEET_IMG    = require('../../assets/BIOFISH_SHEET.jpg');
+const COMPOST_IMG  = require('../../assets/BIOFISH_COMPOST.jpg');
 
 const STAGES = [
   {
@@ -29,11 +30,11 @@ const STAGES = [
   },
 ];
 
-function Photo({ source, caption, icon }) {
+function Photo({ source, caption, icon, height = 220 }) {
   return (
     <View style={styles.photoWrap}>
       {source ? (
-        <Image source={source} style={styles.photo} resizeMode="cover" />
+        <Image source={source} style={[styles.photo, { height }]} resizeMode="cover" />
       ) : (
         <View style={[styles.photo, styles.photoPlaceholder]}>
           <Ionicons name={icon} size={34} color={Colors.textLight} />
@@ -103,14 +104,21 @@ export default function LearnScreen({ onLogout }) {
             <Text style={Theme.cardLabel}>What It Can Be Used For</Text>
           </View>
           <Text style={styles.bodyText}>
-            The bioplastic film produced by BIO-FISH is a thin, flexible sheet that can serve
-            as a sustainable substitute for conventional single-use plastic in several everyday applications.
+            The bioplastic film produced by BIO-FISH is a thin, flexible sheet that can replace
+            conventional single-use plastic in real-world packaging applications.
           </Text>
+
+          <Photo source={COMPOST_IMG} caption="Compost bag packaged using BIO-FISH bioplastic film — produced in collaboration with CEMO, City Government of Marikina" icon="bag-outline" height={320} />
+
           {[
-            { icon: 'bag-outline',       title: 'Food Packaging',      desc: 'Can be formed into wrappers, flat sachets, or small bags for dry goods — tested to hold contents without tearing or deforming.' },
-            { icon: 'leaf-outline',      title: 'Compostable Film',    desc: 'Degrades 71–84% in 3 weeks when buried in soil, and completely disintegrates within 2 days under conditions studied in recent research.' },
-            { icon: 'shield-checkmark-outline', title: 'Antibacterial Layer', desc: 'The formulation includes guava leaf extract as a natural antibacterial additive, making it suitable for protective wrapping of food items.' },
-            { icon: 'refresh-outline',   title: 'Waste Valorization',  desc: 'Made entirely from fish scale waste — a byproduct discarded daily at public markets — turning a sanitation problem into a reusable resource.' },
+            {
+              icon: 'bag-outline', title: 'Packaging',
+              desc: 'The BIO-FISH film was used to package compost bags produced by CEMO — the City Environment and Management Office of the City Government of Marikina. The label reads: "Packaged using Fish Scale-Based Bioplastic Film by BIO-FISH, BIO-FISH Research Team, Polytechnic University of the Philippines, AY 2025–2026."',
+            },
+            {
+              icon: 'refresh-outline', title: 'Waste Valorization',
+              desc: 'Made entirely from fish scale waste — a byproduct discarded daily at public markets — turning a sanitation problem into a recoverable community resource.',
+            },
           ].map((item, i) => (
             <View key={i} style={styles.useRow}>
               <View style={styles.useIcon}>
@@ -131,23 +139,36 @@ export default function LearnScreen({ onLogout }) {
             <Text style={Theme.cardLabel}>Why It Matters</Text>
           </View>
           <Text style={styles.bodyText}>
-            The world makes around 460 million metric tons of fossil-fuel plastic every year. Most of
-            it resists breaking down and pollutes land and sea for decades.
+            The world generates an estimated 460 million metric tons of fossil-fuel-derived plastic
+            every year. These materials resist natural degradation and pollute land and sea for decades.
           </Text>
+          <Text style={styles.cite}>(IUCN, 2024)</Text>
+
           <View style={styles.statRow}>
             <View style={styles.statBox}>
               <Text style={styles.statNum}>460M</Text>
-              <Text style={styles.statLabel}>tons of plastic made yearly</Text>
+              <Text style={styles.statLabel}>metric tons of plastic produced yearly</Text>
+              <Text style={styles.statCite}>(IUCN, 2024)</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statNum}>100%</Text>
-              <Text style={styles.statLabel}>bio-based, biodegradable film</Text>
+              <Text style={styles.statNum}>71–84%</Text>
+              <Text style={styles.statLabel}>degradation after 3 weeks in soil</Text>
+              <Text style={styles.statCite}>(Mottalib et al., 2024)</Text>
             </View>
           </View>
+
           <Text style={styles.bodyText}>
-            BIO-FISH shows a small-scale, sustainable alternative: reuse a waste material, automate the
-            process so it's repeatable, and produce plastic that returns to nature.
+            Fish gelatin-based films degrade 71–84% within three weeks when buried in soil at 10 cm
+            depth. Under other conditions, complete disintegration was observed within just two days.
           </Text>
+          <Text style={styles.cite}>(Mottalib et al., 2024; Jehan et al., 2025)</Text>
+
+          <Text style={styles.bodyText}>
+            BIO-FISH offers a locally adaptable, community-deployable alternative: convert a waste
+            material into a biodegradable film, automate the process for consistency, and support a
+            circular economy at the community level.
+          </Text>
+          <Text style={styles.cite}>(BIO-FISH Research Team, PUP Sta. Mesa, AY 2025–2026)</Text>
         </View>
 
       </ScrollView>
@@ -157,7 +178,7 @@ export default function LearnScreen({ onLogout }) {
 
 const styles = StyleSheet.create({
   photoWrap: { marginBottom: 14 },
-  photo: { width: '100%', height: 180, borderRadius: 16, backgroundColor: Colors.inputBg },
+  photo: { width: '100%', height: 220, borderRadius: 16, backgroundColor: Colors.inputBg },
   photoPlaceholder: { alignItems: 'center', justifyContent: 'center', gap: 8 },
   placeholderText: { fontSize: 12, color: Colors.textLight, fontWeight: '600' },
   caption: { fontSize: 11, color: Colors.textMid, fontStyle: 'italic', textAlign: 'center', marginTop: 8 },
@@ -183,6 +204,8 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, backgroundColor: Colors.inputBg, borderRadius: 14, padding: 14, alignItems: 'center' },
   statNum: { fontSize: 22, fontWeight: '900', color: Colors.blue },
   statLabel: { fontSize: 10, color: Colors.textMid, fontWeight: '600', textAlign: 'center', marginTop: 4, lineHeight: 14 },
+  cite:     { fontSize: 10, color: Colors.textLight, fontStyle: 'italic', marginTop: -8, marginBottom: 12 },
+  statCite: { fontSize: 9, color: Colors.textLight, fontStyle: 'italic', marginTop: 4, textAlign: 'center' },
   useRow:   { flexDirection: 'row', gap: 14, marginBottom: 14, alignItems: 'flex-start' },
   useIcon:  { width: 38, height: 38, borderRadius: 12, backgroundColor: Colors.inputBg, alignItems: 'center', justifyContent: 'center' },
   useBody:  { flex: 1 },
