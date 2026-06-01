@@ -8,15 +8,24 @@
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; background-color: #1a3a4a; }
-      body { overflow: hidden; }
-      #root { height: 100%; }
+      body { overflow: hidden; display: flex; justify-content: center; }
 
-      /* Thin overlay scrollbar */
-      ::-webkit-scrollbar { width: 4px; }
+      /* Center the app in a mobile-width column on web */
+      #root {
+        width: 100%;
+        max-width: 430px;
+        height: 100vh;
+        overflow: hidden;
+        box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        background-color: #2C6B7F;
+      }
+
+      /* Thin overlay scrollbar inside the app */
+      ::-webkit-scrollbar { width: 5px; }
       ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 99px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
-      * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.25); border-radius: 99px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.4); }
+      * { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.25) transparent; }
     </style>
   </head>
   <body>
