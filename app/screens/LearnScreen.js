@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
 import AppHeader from '../components/AppHeader';
@@ -47,12 +47,14 @@ function Photo({ source, caption, icon, height = 220 }) {
 }
 
 export default function LearnScreen({ onLogout }) {
+  const { width } = useWindowDimensions();
+  const isWide = Platform.OS === 'web' && width >= 900;
   return (
     <BubbleBackground>
       <AppHeader title="Learn"
       subtitle="About BIO-FISH" onLogout={onLogout} channelKey="online-learn" />
 
-      <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[Theme.scrollContent, isWide && styles.contentWide]} showsVerticalScrollIndicator={Platform.OS === 'web'}>
 
         {/* What is BIO-FISH */}
         <View style={Theme.card}>
@@ -64,7 +66,96 @@ export default function LearnScreen({ onLogout }) {
           </Text>
         </View>
 
-        {/* How it works */}
+        {/* What the app does for the machine */}
+        <View style={Theme.card}>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="hardware-chip-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>What This App Does for the Machine</Text>
+          </View>
+          <Text style={styles.bodyText}>
+            The BIO-FISH machine can run on its own — it has an LCD screen and two physical buttons
+            for basic operation. The app extends that by giving you remote visibility and control
+            from anywhere, without needing to be physically next to the machine.
+          </Text>
+          {[
+            {
+              icon: 'send-outline',
+              title: 'Remote commands',
+              desc: 'Start, Pause, Emergency Stop, and Clean can be triggered from your phone through the internet — no need to press the physical buttons on the machine.',
+            },
+            {
+              icon: 'settings-outline',
+              title: 'Settings sync',
+              desc: 'Parameters like water volume, temperature targets, mix time, and glycerin percentage can be adjusted from the app and synced to the machine — no manual reconfiguration on the device needed.',
+            },
+            {
+              icon: 'wifi-outline',
+              title: 'Live status over WiFi',
+              desc: 'When connected, the machine pushes its temperatures, stage, and actuator states to the cloud every few seconds — giving the app a live view of what the LCD shows locally.',
+            },
+          ].map((item, i) => (
+            <View key={i} style={styles.useRow}>
+              <View style={styles.useIcon}>
+                <Ionicons name={item.icon} size={18} color={Colors.blue} />
+              </View>
+              <View style={styles.useBody}>
+                <Text style={styles.useTitle}>{item.title}</Text>
+                <Text style={styles.useDesc}>{item.desc}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* What the app does for users */}
+        <View style={Theme.card}>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="person-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>What This App Does for You</Text>
+          </View>
+          <Text style={styles.bodyText}>
+            You do not need to stand next to the machine while it runs. The app lets you monitor
+            and control the entire production cycle from your phone or any web browser.
+          </Text>
+          {[
+            {
+              icon: 'pulse-outline',
+              title: 'Live monitoring',
+              desc: 'Watch temperatures, the active stage, heater and fan state, and a running process log — all updating in real time while the machine works.',
+            },
+            {
+              icon: 'play-circle-outline',
+              title: 'Full remote control',
+              desc: 'Start a production cycle, pause it mid-run, trigger an emergency stop, or run a cleaning flush — all without touching the machine.',
+            },
+            {
+              icon: 'flask-outline',
+              title: 'Demo Mode',
+              desc: 'No machine available? Demo Mode simulates a full production run inside the app so you can learn how the process works or demonstrate the system to others.',
+            },
+            {
+              icon: 'options-outline',
+              title: 'Adjustable parameters',
+              desc: 'Change water volume, max temperature, mix time, glycerin percentage, and more from the Settings tab. Changes sync to the machine automatically.',
+            },
+            {
+              icon: 'lock-closed-outline',
+              title: 'Shared PIN access',
+              desc: 'One PIN protects the controls. The whole team shares it — no accounts needed. The PIN can be changed from Settings and takes effect for everyone immediately.',
+            },
+          ].map((item, i) => (
+            <View key={i} style={styles.useRow}>
+              <View style={styles.useIcon}>
+                <Ionicons name={item.icon} size={18} color={Colors.blue} />
+              </View>
+              <View style={styles.useBody}>
+                <Text style={styles.useTitle}>{item.title}</Text>
+                <Text style={styles.useDesc}>{item.desc}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+
         <View style={Theme.card}>
           <View style={Theme.cardLabelRow}>
             <Ionicons name="git-branch-outline" size={13} color={Colors.textMid} />
@@ -235,6 +326,7 @@ Secant Modulus`}</Text>
 }
 
 const styles = StyleSheet.create({
+  contentWide: { maxWidth: 700, alignSelf: 'center', width: '100%' },
   photoWrap: { marginBottom: 14 },
   photo: { width: '100%', height: 220, borderRadius: 16, backgroundColor: Colors.inputBg },
   photoPlaceholder: { alignItems: 'center', justifyContent: 'center', gap: 8 },
