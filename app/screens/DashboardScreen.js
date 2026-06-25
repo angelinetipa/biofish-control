@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  Image, ScrollView, RefreshControl,
+  Image, ScrollView, RefreshControl, useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -296,6 +296,9 @@ export default function DashboardScreen({ onLogout }) {
   const [refreshing, setRefreshing] = useState(false);
   const [demo, setDemo]         = useState(false);
 
+  const { width } = useWindowDimensions();
+  const wide = width >= 900;
+
   const demoRef = useRef(false);
   const dmRef   = useRef({ idx: 0, rem: 0, paused: false, mode: 'idle',
                            trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cleaning: false });
@@ -517,8 +520,13 @@ export default function DashboardScreen({ onLogout }) {
 
         {hasDecision && <DecisionCard machine={machine} send={sendCommand} loading={loading} />}
 
-        {/* ── Status + Stage + Temps + Log ── */}
-        <View style={Theme.card}>
+        <View style={styles.pageWrap}>
+
+        <View style={[styles.colsWrap, wide && styles.colsRow]}>
+
+        <View style={wide ? styles.colLeft : styles.colFull}>
+        {/* ── Status + Stage + Temps ── */}
+        <View style={[Theme.card, wide && styles.fillCard]}>
           <View style={styles.statusRow}>
             <View style={{ flex: 1 }}>
               <View style={styles.statusLabelRow}>
@@ -575,32 +583,14 @@ export default function DashboardScreen({ onLogout }) {
               </View>
             </View>
           </View>
-
-          <View style={styles.divider} />
-
-          <View style={Theme.cardLabelRow}>
-            <Ionicons name="document-text-outline" size={13} color={Colors.textMid} />
-            <Text style={Theme.cardLabel}>Process Log</Text>
-          </View>
-          {!online && !demo && (
-            <Text style={styles.logStale}>Machine offline — showing last received data.</Text>
-          )}
-          <View style={styles.logList}>
-            {logEntries.length === 0 ? (
-              <Text style={styles.logEmpty}>No activity yet.</Text>
-            ) : (
-              logEntries.map((entry, i) => (
-                <View key={i} style={styles.logRow}>
-                  <View style={[styles.logDot, i === 0 && styles.logDotActive]} />
-                  <Text style={[styles.logText, i === 0 && styles.logTextActive]}>{entry}</Text>
-                </View>
-              ))
-            )}
-          </View>
         </View>
+        </View>
+        {/* ── end monitor card ── */}
+
+        <View style={wide ? styles.colRight : styles.colFull}>
 
         {/* ── Control Buttons 2×2 ── */}
-        <View style={Theme.card}>
+        <View style={[Theme.card, wide && styles.fillCard]}>
           <View style={styles.cardHeadRow}>
             <View style={[Theme.cardLabelRow, { marginBottom: 0 }]}>
               <Ionicons name="flash-outline" size={13} color={Colors.textMid} />
@@ -647,6 +637,38 @@ export default function DashboardScreen({ onLogout }) {
           ) : null}
         </View>
 
+        </View>
+        {/* ── end right column ── */}
+
+        </View>
+        {/* ── end columns wrapper ── */}
+
+        {/* ── Process Log (full width) ── */}
+        <View style={Theme.card}>
+          <View style={Theme.cardLabelRow}>
+            <Ionicons name="document-text-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>Process Log</Text>
+          </View>
+          {!online && !demo && (
+            <Text style={styles.logStale}>Machine offline — showing last received data.</Text>
+          )}
+          <View style={styles.logList}>
+            {logEntries.length === 0 ? (
+              <Text style={styles.logEmpty}>No activity yet.</Text>
+            ) : (
+              logEntries.map((entry, i) => (
+                <View key={i} style={styles.logRow}>
+                  <View style={[styles.logDot, i === 0 && styles.logDotActive]} />
+                  <Text style={[styles.logText, i === 0 && styles.logTextActive]}>{entry}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+
+        </View>
+        {/* ── end page wrapper ── */}
+
       </ScrollView>
     </BubbleBackground>
   );
@@ -659,6 +681,14 @@ const styles = StyleSheet.create({
 
 
   scroll: { padding: 16, paddingBottom: 80, gap: 14 },
+
+  pageWrap:  { width: '100%', maxWidth: 1240, alignSelf: 'center', gap: 14 },
+  colsWrap: { width: '100%', gap: 14 },
+  colsRow:   { flexDirection: 'row', alignItems: 'stretch' },
+  colLeft:   { flex: 1.4, gap: 14 },
+  colRight:  { flex: 1, gap: 14 },
+  colFull:   { width: '100%', gap: 14 },
+  fillCard:  { flex: 1 },
 
   cardHeadRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
   demoPill: {

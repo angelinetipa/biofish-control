@@ -91,7 +91,7 @@ export default function AppHeader({
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 16, paddingTop: 52, paddingBottom: 10 },
+  container: { paddingHorizontal: 16, paddingTop: Platform.OS === 'web' ? 18 : 52, paddingBottom: 10 },
 
   // Row 1
   row:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
