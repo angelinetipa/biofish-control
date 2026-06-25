@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Alert, View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Image, TextInput, Platform,
+  TouchableOpacity, Image, TextInput, Platform, useWindowDimensions, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
@@ -32,9 +32,19 @@ const TEAM = [
 const defaultValues = () => PARAMS.reduce((acc, p) => ({ ...acc, [p.key]: p.def }), {});
 const fmt = (p, v) => (p.step < 1 ? Number(v).toFixed(2) : Number(v).toFixed(0));
 
+// ─── Admin gate ───────────────────────────────────────────────────────────────
+// Secret code required to reveal the Change-PIN form. Knowing the shared access
+// PIN is NOT enough — only someone with this admin code can change the password.
+// Set via EAS env var:  EXPO_PUBLIC_ADMIN_PIN
+// NOTE: EXPO_PUBLIC_ vars are bundled into the build, so this is obscurity, not
+// true security. Future: move PIN changes server-side (Supabase RLS + admin row).
+const ADMIN_PIN = process.env.EXPO_PUBLIC_ADMIN_PIN || '731904';
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function SettingsScreen({ onLogout }) {
+  const { width } = useWindowDimensions();
+  const isWide = width >= 900;
   const [values, setValues]   = useState(defaultValues);
   const [dirty, setDirty]     = useState(false);
   const [saving, setSaving]   = useState(false);
@@ -49,6 +59,28 @@ export default function SettingsScreen({ onLogout }) {
   const [showNew, setShowNew]         = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [livePin, setLivePin]         = useState('');  // current PIN from DB
+
+  // Hidden admin gate (long-press logo → enter admin code → reveal Change PIN)
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [adminModal, setAdminModal]       = useState(false);
+  const [adminInput, setAdminInput]       = useState('');
+
+  const tryUnlock = () => {
+    if (adminInput === ADMIN_PIN) {
+      setAdminUnlocked(true);
+      setAdminModal(false);
+      setAdminInput('');
+    } else {
+      Alert.alert('Incorrect', 'Admin code is incorrect.');
+      setAdminInput('');
+    }
+  };
+
+  const openAdmin = () => {
+    if (adminUnlocked) return;
+    setAdminInput('');
+    setAdminModal(true);
+  };
 
   const dirtyRef = useRef(false);
   useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
@@ -147,7 +179,11 @@ export default function SettingsScreen({ onLogout }) {
 
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* Machine Parameters */}
+        <View style={styles.pageWrap}>
+        <View style={[styles.colsWrap, isWide && styles.colsRow]}>
+
+        {/* ── Left: Machine Parameters ── */}
+        <View style={isWide ? styles.colLeft : styles.colFull}>
         <View style={Theme.card}>
           <View style={styles.cardHeadRow}>
             <View style={Theme.cardLabelRow}>
@@ -192,12 +228,63 @@ export default function SettingsScreen({ onLogout }) {
             <Text style={styles.saveText}>{saving ? 'Saving…' : 'Save All'}</Text>
           </TouchableOpacity>
         </View>
+        </View>
 
-        {/* Change PIN */}
+        {/* ── Right: About + (admin-revealed) Change PIN ── */}
+        <View style={isWide ? styles.colRight : styles.colFull}>
+
         <View style={Theme.card}>
           <View style={Theme.cardLabelRow}>
-            <Ionicons name="key-outline" size={13} color={Colors.textMid} />
-            <Text style={Theme.cardLabel}>Change Access PIN</Text>
+            <Ionicons name="information-circle-outline" size={13} color={Colors.textMid} />
+            <Text style={Theme.cardLabel}>About Us</Text>
+          </View>
+
+          <View style={styles.logoRow}>
+            <TouchableOpacity onLongPress={openAdmin} delayLongPress={650} activeOpacity={1}>
+              <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.aboutLogo} />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.aboutTitle}>BIO-FISH</Text>
+              <Text style={styles.aboutSubtitle}>Bioplastic Sheet Production{'\n'}from Fish Scales</Text>
+            </View>
+          </View>
+
+          <Text style={styles.aboutDesc}>
+            BIO-FISH is a capstone project that automates the extraction of gelatin
+            from fish scales to produce bioplastic sheets — a sustainable alternative
+            to conventional plastics.
+          </Text>
+
+          <Text style={styles.sectionLabel}>THE TEAM</Text>
+          {TEAM.map((member) => (
+            <View key={member.name} style={styles.memberRow}>
+              <View style={styles.avatar}>
+                <Ionicons name="person" size={16} color={Colors.statusRunning} />
+              </View>
+              <View>
+                <Text style={styles.memberName}>{member.name}</Text>
+                <Text style={styles.memberRole}>{member.role}</Text>
+              </View>
+            </View>
+          ))}
+
+          <Text style={styles.sectionLabel}>SCHOOL & COURSE</Text>
+          <Text style={styles.schoolText}>Polytechnic University of the Philippines</Text>
+          <Text style={styles.schoolText}>Sta. Mesa, Manila</Text>
+          <Text style={styles.schoolText}>CMPE 407 — Academic Year 2025–2026</Text>
+        </View>
+
+        {adminUnlocked && (
+        <View style={Theme.card}>
+          <View style={styles.cardHeadRow}>
+            <View style={Theme.cardLabelRow}>
+              <Ionicons name="key-outline" size={13} color={Colors.textMid} />
+              <Text style={Theme.cardLabel}>Change Access PIN</Text>
+            </View>
+            <View style={[styles.syncPill, styles.adminPill]}>
+              <Ionicons name="shield-checkmark" size={11} color={Colors.teal} />
+              <Text style={[styles.syncText, { color: Colors.teal }]}>Admin</Text>
+            </View>
           </View>
 
           <Text style={styles.pinHint}>Changes take effect for all users on next login.</Text>
@@ -238,48 +325,64 @@ export default function SettingsScreen({ onLogout }) {
             <Text style={styles.saveText}>{pinSaving ? 'Saving…' : 'Update PIN'}</Text>
           </TouchableOpacity>
         </View>
+        )}
 
-        {/* About Us */}
-        <View style={Theme.card}>
-          <View style={Theme.cardLabelRow}>
-            <Ionicons name="information-circle-outline" size={13} color={Colors.textMid} />
-            <Text style={Theme.cardLabel}>About Us</Text>
-          </View>
+        </View>
 
-          <View style={styles.logoRow}>
-            <Image source={require('../../assets/BIOFISH_LOGO.png')} style={styles.aboutLogo} />
-            <View>
-              <Text style={styles.aboutTitle}>BIO-FISH</Text>
-              <Text style={styles.aboutSubtitle}>Bioplastic Sheet Production{'\n'}from Fish Scales</Text>
-            </View>
-          </View>
-
-          <Text style={styles.aboutDesc}>
-            BIO-FISH is a capstone project that automates the extraction of gelatin
-            from fish scales to produce bioplastic sheets — a sustainable alternative
-            to conventional plastics.
-          </Text>
-
-          <Text style={styles.sectionLabel}>THE TEAM</Text>
-          {TEAM.map((member) => (
-            <View key={member.name} style={styles.memberRow}>
-              <View style={styles.avatar}>
-                <Ionicons name="person" size={16} color={Colors.statusRunning} />
-              </View>
-              <View>
-                <Text style={styles.memberName}>{member.name}</Text>
-                <Text style={styles.memberRole}>{member.role}</Text>
-              </View>
-            </View>
-          ))}
-
-          <Text style={styles.sectionLabel}>SCHOOL & COURSE</Text>
-          <Text style={styles.schoolText}>Polytechnic University of the Philippines</Text>
-          <Text style={styles.schoolText}>Sta. Mesa, Manila</Text>
-          <Text style={styles.schoolText}>CMPE 407 — Academic Year 2025–2026</Text>
+        </View>
         </View>
 
       </ScrollView>
+
+      {/* ── Hidden Admin gate modal ── */}
+      <Modal
+        visible={adminModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAdminModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalIcon}>
+              <Ionicons name="lock-closed" size={22} color={Colors.teal} />
+            </View>
+            <Text style={styles.modalTitle}>Admin Access</Text>
+            <Text style={styles.modalDesc}>Enter the admin code to manage the access PIN.</Text>
+
+            <TextInput
+              style={styles.modalInput}
+              value={adminInput}
+              onChangeText={setAdminInput}
+              secureTextEntry
+              keyboardType="number-pad"
+              maxLength={12}
+              autoFocus
+              placeholder="••••••"
+              placeholderTextColor={Colors.textLight}
+              onSubmitEditing={tryUnlock}
+            />
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalCancel]}
+                onPress={() => setAdminModal(false)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalUnlock]}
+                onPress={tryUnlock}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="lock-open-outline" size={15} color={Colors.white} />
+                <Text style={styles.modalUnlockText}>Unlock</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </BubbleBackground>
   );
 }
@@ -287,6 +390,46 @@ export default function SettingsScreen({ onLogout }) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  pageWrap:  { width: '100%', maxWidth: 1040, alignSelf: 'center', gap: 14 },
+  colsWrap:  { width: '100%', gap: 14 },
+  colsRow:   { flexDirection: 'row', alignItems: 'flex-start' },
+  colLeft:   { flex: 1, gap: 14 },
+  colRight:  { flex: 1, gap: 14 },
+  colFull:   { width: '100%', gap: 14 },
+  adminPill: { backgroundColor: 'rgba(93,217,210,0.18)' },
+
+  // Admin modal
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center', justifyContent: 'center', padding: 24,
+  },
+  modalCard: {
+    width: '100%', maxWidth: 340, backgroundColor: Colors.cardBg,
+    borderRadius: 22, padding: 22, alignItems: 'center',
+    elevation: 12, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 18, shadowOffset: { width: 0, height: 8 },
+  },
+  modalIcon: {
+    width: 48, height: 48, borderRadius: 24, marginBottom: 12,
+    backgroundColor: 'rgba(93,217,210,0.18)', alignItems: 'center', justifyContent: 'center',
+  },
+  modalTitle: { fontSize: 17, fontWeight: '900', color: Colors.dark, marginBottom: 4 },
+  modalDesc:  { fontSize: 12, color: Colors.textMid, textAlign: 'center', lineHeight: 18, marginBottom: 16 },
+  modalInput: {
+    width: '100%', backgroundColor: Colors.inputBg, borderRadius: 12,
+    paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 14 : 11,
+    fontSize: 16, color: Colors.textDark, letterSpacing: 4, textAlign: 'center',
+    borderWidth: 2, borderColor: 'transparent', marginBottom: 16,
+  },
+  modalBtnRow: { flexDirection: 'row', gap: 10, width: '100%' },
+  modalBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 12, borderRadius: 12,
+  },
+  modalCancel:     { backgroundColor: Colors.inputBg },
+  modalCancelText: { color: Colors.textMid, fontWeight: '700', fontSize: 13 },
+  modalUnlock:     { backgroundColor: Colors.teal },
+  modalUnlockText: { color: Colors.white, fontWeight: '800', fontSize: 13 },
+
   cardHeadRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', marginBottom: 4,

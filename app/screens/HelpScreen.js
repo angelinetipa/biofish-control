@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BubbleBackground from '../components/BubbleBackground';
 import AppHeader from '../components/AppHeader';
@@ -78,12 +78,19 @@ function AccordionItem({ question, answer }) {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function HelpScreen({ onLogout }) {
+  const { width } = useWindowDimensions();
+  const isWide = width >= 900;
   return (
     <BubbleBackground>
       <AppHeader title="Help"
       subtitle="Guide & troubleshoot" onLogout={onLogout} channelKey="online-help" />
 
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
+
+        <View style={styles.pageWrap}>
+        <View style={[styles.colsWrap, isWide && styles.colsRow]}>
+
+        <View style={isWide ? styles.col : styles.colFull}>
 
         {/* How to Use */}
         <View style={Theme.card}>
@@ -114,6 +121,11 @@ export default function HelpScreen({ onLogout }) {
             <AccordionItem key={i} question={item.q} answer={item.a} />
           ))}
         </View>
+
+        </View>
+
+        {/* ── right column ── */}
+        <View style={isWide ? styles.col : styles.colFull}>
 
         {/* Connecting the Machine */}
         <View style={Theme.card}>
@@ -161,6 +173,10 @@ export default function HelpScreen({ onLogout }) {
           ))}
         </View>
 
+        </View>
+        </View>
+        </View>
+
       </ScrollView>
     </BubbleBackground>
   );
@@ -169,6 +185,11 @@ export default function HelpScreen({ onLogout }) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  pageWrap:  { width: '100%', maxWidth: 1100, alignSelf: 'center' },
+  colsWrap:  { width: '100%', gap: 14 },
+  colsRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  col:       { flex: 1, gap: 14 },
+  colFull:   { width: '100%', gap: 14 },
   stepRow: {
     flexDirection: 'row', gap: 14, marginBottom: 16, alignItems: 'flex-start',
   },

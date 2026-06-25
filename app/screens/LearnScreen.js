@@ -54,7 +54,12 @@ export default function LearnScreen({ onLogout }) {
       <AppHeader title="Learn"
       subtitle="About BIO-FISH" onLogout={onLogout} channelKey="online-learn" />
 
-      <ScrollView contentContainerStyle={[Theme.scrollContent, isWide && styles.contentWide]} showsVerticalScrollIndicator={Platform.OS === 'web'}>
+      <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={Platform.OS === 'web'}>
+
+        <View style={styles.pageWrap}>
+        <View style={[styles.colsWrap, isWide && styles.colsRow]}>
+
+        <View style={isWide ? styles.col : styles.colFull}>
 
         {/* What is BIO-FISH */}
         <View style={Theme.card}>
@@ -179,6 +184,11 @@ export default function LearnScreen({ onLogout }) {
             </View>
           ))}
         </View>
+
+        </View>
+
+        {/* ── right column ── */}
+        <View style={isWide ? styles.col : styles.colFull}>
 
         {/* The output */}
         <View style={Theme.card}>
@@ -320,13 +330,21 @@ Secant Modulus`}</Text>
           <Text style={styles.cite}>(BIO-FISH Research Team, PUP Sta. Mesa, AY 2025–2026)</Text>
         </View>
 
+        </View>
+        </View>
+        </View>
+
       </ScrollView>
     </BubbleBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  contentWide: { maxWidth: 700, alignSelf: 'center', width: '100%' },
+  pageWrap:  { width: '100%', maxWidth: 1100, alignSelf: 'center' },
+  colsWrap:  { width: '100%', gap: 14 },
+  colsRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  col:       { flex: 1, gap: 14 },
+  colFull:   { width: '100%', gap: 14 },
   photoWrap: { marginBottom: 14 },
   photo: { width: '100%', height: 220, borderRadius: 16, backgroundColor: Colors.inputBg },
   photoPlaceholder: { alignItems: 'center', justifyContent: 'center', gap: 8 },
