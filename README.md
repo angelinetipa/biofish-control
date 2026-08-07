@@ -6,7 +6,7 @@ Fish scales are one of the most common waste products in Philippine wet markets.
 
 🔗 **Live app:** [biofish-control.vercel.app](https://biofish-control.vercel.app)
 
-![BIO-FISH dashboard](docs/screenshot.png)
+![BIO-FISH dashboard](docs/screenshot.jpeg)
 
 ## About this project
 
