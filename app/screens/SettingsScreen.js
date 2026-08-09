@@ -9,6 +9,7 @@ import AppHeader from '../components/AppHeader';
 import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
+import { isGuest } from '../lib/guest';   // GUEST
 
 // ─── Machine parameters (match ESP32 firmware v2.6 exactly) ───────────────────
 const PARAMS = [
@@ -43,6 +44,8 @@ const ADMIN_PIN = process.env.EXPO_PUBLIC_ADMIN_PIN || '731904';
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function SettingsScreen({ onLogout }) {
+  const guest = isGuest();   // GUEST — public demo visitor: read-only, no admin gate
+
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
   const [values, setValues]   = useState(defaultValues);
@@ -66,6 +69,7 @@ export default function SettingsScreen({ onLogout }) {
   const [adminInput, setAdminInput]       = useState('');
 
   const tryUnlock = () => {
+    if (guest) return;   // GUEST
     if (adminInput === ADMIN_PIN) {
       setAdminUnlocked(true);
       setAdminModal(false);
@@ -77,6 +81,10 @@ export default function SettingsScreen({ onLogout }) {
   };
 
   const openAdmin = () => {
+    // GUEST — the demo is open to anyone, so the admin gate must not even
+    // appear. Writes are already blocked in lib/supabase.js; this closes the
+    // door one layer earlier so the form is never reachable.
+    if (guest) return;
     if (adminUnlocked) return;
     setAdminInput('');
     setAdminModal(true);
@@ -119,6 +127,7 @@ export default function SettingsScreen({ onLogout }) {
   }, []);
 
   const adjust = (key, dir) => {
+    if (guest) return;   // GUEST — values stay exactly as the machine has them
     setValues((prev) => {
       const p = PARAMS.find((x) => x.key === key);
       let v = Number(prev[key]) + dir * p.step;
@@ -180,6 +189,21 @@ export default function SettingsScreen({ onLogout }) {
       <ScrollView contentContainerStyle={Theme.scrollContent} showsVerticalScrollIndicator={false}>
 
         <View style={styles.pageWrap}>
+
+        {/* GUEST — say up front why nothing here can be changed */}
+        {guest && (
+          <View style={Theme.card}>
+            <View style={Theme.cardLabelRow}>
+              <Ionicons name="eye-outline" size={13} color={Colors.textMid} />
+              <Text style={Theme.cardLabel}>Demo — view only</Text>
+            </View>
+            <Text style={styles.guestNote}>
+              These are the real machine parameters, shown for reference.
+              Editing is turned off in the public demo.
+            </Text>
+          </View>
+        )}
+
         <View style={[styles.colsWrap, isWide && styles.colsRow]}>
 
         {/* ── Left: Machine Parameters ── */}
@@ -190,43 +214,56 @@ export default function SettingsScreen({ onLogout }) {
               <Ionicons name="settings-outline" size={13} color={Colors.textMid} />
               <Text style={Theme.cardLabel}>Machine Parameters</Text>
             </View>
-            <View style={[styles.syncPill, dirty ? styles.syncDirty : styles.syncOk]}>
-              <Ionicons name={dirty ? 'ellipse' : 'checkmark-circle'} size={11}
-                color={dirty ? '#D4840A' : Colors.teal} />
-              <Text style={[styles.syncText, { color: dirty ? '#D4840A' : Colors.teal }]}>
-                {dirty ? 'Unsaved' : 'Synced'}
-              </Text>
-            </View>
+            {guest ? (
+              <View style={[styles.syncPill, styles.syncOk]}>
+                <Ionicons name="lock-closed" size={11} color={Colors.teal} />
+                <Text style={[styles.syncText, { color: Colors.teal }]}>Read-only</Text>
+              </View>
+            ) : (
+              <View style={[styles.syncPill, dirty ? styles.syncDirty : styles.syncOk]}>
+                <Ionicons name={dirty ? 'ellipse' : 'checkmark-circle'} size={11}
+                  color={dirty ? '#D4840A' : Colors.teal} />
+                <Text style={[styles.syncText, { color: dirty ? '#D4840A' : Colors.teal }]}>
+                  {dirty ? 'Unsaved' : 'Synced'}
+                </Text>
+              </View>
+            )}
           </View>
 
           {PARAMS.map((p) => (
             <View key={p.key} style={styles.paramRow}>
               <Text style={styles.paramLabel}>{p.label}</Text>
               <View style={styles.paramControl}>
-                <TouchableOpacity style={styles.adjBtn} onPress={() => adjust(p.key, -1)}
-                  disabled={!loaded || values[p.key] <= p.min}>
-                  <Ionicons name="remove" size={16}
-                    color={values[p.key] <= p.min ? Colors.textLight : Colors.statusRunning} />
-                </TouchableOpacity>
+                {!guest && (
+                  <TouchableOpacity style={styles.adjBtn} onPress={() => adjust(p.key, -1)}
+                    disabled={!loaded || values[p.key] <= p.min}>
+                    <Ionicons name="remove" size={16}
+                      color={values[p.key] <= p.min ? Colors.textLight : Colors.statusRunning} />
+                  </TouchableOpacity>
+                )}
                 <Text style={styles.paramValue}>{fmt(p, values[p.key])} {p.unit}</Text>
-                <TouchableOpacity style={styles.adjBtn} onPress={() => adjust(p.key, 1)}
-                  disabled={!loaded || values[p.key] >= p.max}>
-                  <Ionicons name="add" size={16}
-                    color={values[p.key] >= p.max ? Colors.textLight : Colors.statusRunning} />
-                </TouchableOpacity>
+                {!guest && (
+                  <TouchableOpacity style={styles.adjBtn} onPress={() => adjust(p.key, 1)}
+                    disabled={!loaded || values[p.key] >= p.max}>
+                    <Ionicons name="add" size={16}
+                      color={values[p.key] >= p.max ? Colors.textLight : Colors.statusRunning} />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           ))}
 
-          <TouchableOpacity
-            style={[styles.saveBtn, (!dirty || saving) && styles.saveBtnOff]}
-            onPress={saveAll}
-            disabled={!dirty || saving}
-            activeOpacity={0.85}
-          >
-            <Ionicons name={saving ? 'sync' : 'cloud-upload-outline'} size={16} color={Colors.white} />
-            <Text style={styles.saveText}>{saving ? 'Saving…' : 'Save All'}</Text>
-          </TouchableOpacity>
+          {!guest && (
+            <TouchableOpacity
+              style={[styles.saveBtn, (!dirty || saving) && styles.saveBtnOff]}
+              onPress={saveAll}
+              disabled={!dirty || saving}
+              activeOpacity={0.85}
+            >
+              <Ionicons name={saving ? 'sync' : 'cloud-upload-outline'} size={16} color={Colors.white} />
+              <Text style={styles.saveText}>{saving ? 'Saving…' : 'Save All'}</Text>
+            </TouchableOpacity>
+          )}
         </View>
         </View>
 
@@ -274,7 +311,7 @@ export default function SettingsScreen({ onLogout }) {
           <Text style={styles.schoolText}>CMPE 407 — Academic Year 2025–2026</Text>
         </View>
 
-        {adminUnlocked && (
+        {adminUnlocked && !guest && (
         <View style={Theme.card}>
           <View style={styles.cardHeadRow}>
             <View style={Theme.cardLabelRow}>
@@ -336,7 +373,7 @@ export default function SettingsScreen({ onLogout }) {
 
       {/* ── Hidden Admin gate modal ── */}
       <Modal
-        visible={adminModal}
+        visible={adminModal && !guest}
         transparent
         animationType="fade"
         onRequestClose={() => setAdminModal(false)}
@@ -397,6 +434,8 @@ const styles = StyleSheet.create({
   colRight:  { flex: 1, gap: 14 },
   colFull:   { width: '100%', gap: 14 },
   adminPill: { backgroundColor: 'rgba(93,217,210,0.18)' },
+
+  guestNote: { fontSize: 12, color: Colors.textMid, lineHeight: 18 },
 
   // Admin modal
   modalOverlay: {
