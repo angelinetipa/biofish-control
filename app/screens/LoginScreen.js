@@ -44,6 +44,11 @@ export default function LoginScreen({ onLogin }) {
     }
   };
 
+  // Guest entry — no PIN, no machine. Demo Mode starts on and all
+  // Supabase writes are blocked, so a visitor can explore but not change
+  // anything. See app/lib/supabase.js for the guard.
+  const handleDemo = () => onLogin({ ok: true, guest: true });
+
   const loading = accessPin === null;
 
   return (
@@ -118,6 +123,25 @@ export default function LoginScreen({ onLogin }) {
 
             <Text style={styles.noteInline}>PIN required to access machine controls.</Text>
 
+            {/* Divider */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Guest demo */}
+            <TouchableOpacity onPress={handleDemo} activeOpacity={0.85} style={styles.demoWrap}>
+              <View style={styles.demoBtn}>
+                <Ionicons name="flask-outline" size={16} color={Colors.teal} />
+                <Text style={styles.demoText}>TRY DEMO</Text>
+              </View>
+            </TouchableOpacity>
+
+            <Text style={styles.noteInline}>
+              Simulated run — no machine or PIN needed. View only.
+            </Text>
+
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -169,7 +193,6 @@ const styles = StyleSheet.create({
     shadowColor: Colors.teal, shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.35, shadowRadius: 8,
   },
-
   error: { color: Colors.statusStop, fontSize: 12, marginBottom: 8, paddingHorizontal: 20 },
 
   btnWrap: {
@@ -185,4 +208,20 @@ const styles = StyleSheet.create({
   btnText: { color: Colors.white, fontSize: 13, fontWeight: '700', letterSpacing: 0.4 },
 
   noteInline: { textAlign: 'center', fontSize: 10, color: Colors.textLight, marginTop: 14, marginHorizontal: 20 },
+
+  // ── Guest demo ──
+  dividerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginTop: 16, marginBottom: 14, marginHorizontal: 20,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(0,0,0,0.08)' },
+  dividerText: { fontSize: 10, fontWeight: '700', color: Colors.textLight, letterSpacing: 1 },
+
+  demoWrap: { marginHorizontal: 20, borderRadius: 14 },
+  demoBtn: {
+    flexDirection: 'row', gap: 8, borderRadius: 14, paddingVertical: 13,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: Colors.teal, backgroundColor: 'transparent',
+  },
+  demoText: { color: Colors.teal, fontSize: 13, fontWeight: '700', letterSpacing: 0.4 },
 });

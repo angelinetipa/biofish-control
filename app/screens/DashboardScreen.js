@@ -10,6 +10,7 @@ import AppHeader from '../components/AppHeader';
 import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
+import { isGuest } from '../lib/guest';   // GUEST
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -290,16 +291,20 @@ function DecisionCard({ machine, send, loading }) {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function DashboardScreen({ onLogout }) {
+  const guest = isGuest();                      // GUEST
+
   const [machine, setMachine]   = useState(DEFAULT_STATE);
   const [loading, setLoading]   = useState(false);
   const [now, setNow]           = useState(Date.now());
   const [refreshing, setRefreshing] = useState(false);
-  const [demo, setDemo]         = useState(false);
+  // GUEST — visitors land with Demo Mode already on. Without it they'd see an
+  // offline machine full of dashes and think the app is broken.
+  const [demo, setDemo]         = useState(guest);
 
   const { width } = useWindowDimensions();
   const wide = width >= 900;
 
-  const demoRef = useRef(false);
+  const demoRef = useRef(guest);                // GUEST
   const dmRef   = useRef({ idx: 0, rem: 0, paused: false, mode: 'idle',
                            trayPhase: 'waiting', trayCount: 0, trayElapsed: 0, cleaning: false });
 
@@ -455,6 +460,12 @@ export default function DashboardScreen({ onLogout }) {
     demoTick();
   };
 
+  // GUEST — paint the idle demo state right away instead of waiting a full
+  // second for the first interval tick, so nothing flashes as empty on load.
+  useEffect(() => {
+    if (guest) demoTick();
+  }, [guest, demoTick]);
+
   useEffect(() => {
     if (!demo) return;
     const id = setInterval(demoTick, 1000);
@@ -596,20 +607,31 @@ export default function DashboardScreen({ onLogout }) {
               <Ionicons name="flash-outline" size={13} color={Colors.textMid} />
               <Text style={Theme.cardLabel}>Machine Control</Text>
             </View>
-            <TouchableOpacity
-              onPress={toggleDemo}
-              activeOpacity={0.8}
-              style={[styles.demoPill, demo ? styles.demoOn : styles.demoOff]}
-            >
-              <Ionicons name={demo ? 'flask' : 'flask-outline'} size={12}
-                color={demo ? Colors.white : Colors.textMid} />
-              <Text style={[styles.demoText, demo && { color: Colors.white }]}>Demo</Text>
-            </TouchableOpacity>
+            {/* GUEST — visitors get a static badge, not a toggle. Turning demo
+                off would show an offline machine and confuse them. */}
+            {guest ? (
+              <View style={[styles.demoPill, styles.demoOn]}>
+                <Ionicons name="flask" size={12} color={Colors.white} />
+                <Text style={[styles.demoText, { color: Colors.white }]}>Demo</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={toggleDemo}
+                activeOpacity={0.8}
+                style={[styles.demoPill, demo ? styles.demoOn : styles.demoOff]}
+              >
+                <Ionicons name={demo ? 'flask' : 'flask-outline'} size={12}
+                  color={demo ? Colors.white : Colors.textMid} />
+                <Text style={[styles.demoText, demo && { color: Colors.white }]}>Demo</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {demo && (
             <Text style={styles.demoHint}>
-              Demo Mode on — simulating the machine. Tap Start, then use the cards to step through the run.
+              {guest
+                ? 'Demo Mode — a simulated run, no machine connected. Tap Start, then use the cards to step through it.'
+                : 'Demo Mode on — simulating the machine. Tap Start, then use the cards to step through the run.'}
             </Text>
           )}
 

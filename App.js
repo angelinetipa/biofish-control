@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Platform, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import DashboardScreen from './app/screens/DashboardScreen';
 import LearnScreen     from './app/screens/LearnScreen';
 import HelpScreen      from './app/screens/HelpScreen';
 import SettingsScreen  from './app/screens/SettingsScreen';
+import { setGuest }    from './app/lib/guest';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,6 +23,9 @@ export default function App() {
   const [splash, setSplash] = useState(true);
   const [user, setUser]     = useState(null);
 
+  // Flip the read-only flag before any screen mounts.
+  const handleLogin = (u) => { setGuest(!!u?.guest); setUser(u); };
+
   if (splash) return (
     <WebShell>
       <View style={{ flex: 1, backgroundColor: '#2C6B7F' }}>
@@ -33,12 +37,12 @@ export default function App() {
   if (!user) return (
     <WebShell>
       <View style={{ flex: 1, backgroundColor: '#2C6B7F' }}>
-        <LoginScreen onLogin={setUser} />
+        <LoginScreen onLogin={handleLogin} />
       </View>
     </WebShell>
   );
 
-  const logout = () => setUser(null);
+  const logout = () => { setGuest(false); setUser(null); };
 
   return (
     <WebShell>
