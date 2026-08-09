@@ -14,7 +14,7 @@ Two things sit side by side here, and it's worth being clear about which is whic
 
 **The machine** is our engineering capstone — a team of four, and a 2026 APEAR Top 8 finalist.
 
-**This app is not part of the thesis.** Our Software Development course required us to build a working application, so instead of building something disposable, I proposed we build the control interface our own machine actually needed. One piece of work, two purposes. I led the development.
+**This app is not part of the thesis.** Our Software Design course required us to build a working application, so instead of building something disposable, I proposed we build the control interface our own machine actually needed. One piece of work, two purposes. I led the development.
 
 ## What the machine does
 
